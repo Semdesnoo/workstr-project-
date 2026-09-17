@@ -5,7 +5,7 @@ import {
   MapPin, Clock, Buildings, User, PaperPlaneRight, Lightning, ThumbsUp,
   ThumbsDown, CaretLeft, Star, Cards, ChatCircle, UserCircle, CaretRight,
   SignOut, Envelope, Lock, AppleLogo, GoogleLogo, WifiHigh, CellSignalFull,
-  BatteryFull,
+  BatteryFull, Eye, EyeSlash, ShieldCheck, Timer, CalendarCheck,
 } from "@phosphor-icons/react";
 import { analyzeCV, optimizeJob, matchScore, icebreaker, isLiveAI } from "./ai.js";
 import "./product.css";
@@ -85,7 +85,7 @@ function ScoreRing({ score, size = 56 }) {
 
 // --- Swipe card --------------------------------------------------------------
 
-function SwipeCard({ item, kind, top, onDecision, matchInfo }) {
+function SwipeCard({ item, kind, top, onDecision, matchInfo, blind }) {
   const reduce = useReducedMotion();
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-220, 220], [-14, 14]);
@@ -99,9 +99,12 @@ function SwipeCard({ item, kind, top, onDecision, matchInfo }) {
   }
 
   const isJob = kind === "job";
+  // Blind mode = employer swipes on candidates without name/photo (bias-free).
+  const hideIdentity = blind && !isJob;
+  const displayName = hideIdentity ? "Anonieme kandidaat" : (isJob ? item.title : item.name);
   return (
     <motion.div
-      className={`pd-card ${top ? "is-top" : "is-back"}`}
+      className={`pd-card ${top ? "is-top" : "is-back"} ${hideIdentity ? "is-blind" : ""}`}
       style={top ? { x, rotate } : undefined}
       drag={top && !reduce ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
@@ -109,7 +112,13 @@ function SwipeCard({ item, kind, top, onDecision, matchInfo }) {
       onDragEnd={end}
       animate={top ? { scale: 1, y: 0, opacity: 1 } : { scale: 0.94, y: 14, opacity: 0.85 }}
     >
-      <img className="pd-card-photo" src={`./${item.image}.webp`} alt="" draggable="false" />
+      {hideIdentity ? (
+        <div className="pd-card-blindbg">
+          <ShieldCheck size={54} weight="thin" />
+        </div>
+      ) : (
+        <img className="pd-card-photo" src={`./${item.image}.webp`} alt="" draggable="false" />
+      )}
       <div className="pd-card-shade" />
       {matchInfo && (
         <div className="pd-match-badge">
@@ -124,8 +133,11 @@ function SwipeCard({ item, kind, top, onDecision, matchInfo }) {
         </>
       )}
       <div className="pd-card-body">
+        {hideIdentity && (
+          <span className="pd-card-blindtag"><ShieldCheck size={13} weight="fill" /> Bias-vrij · naam &amp; foto verborgen</span>
+        )}
         <span className="pd-card-tag">{isJob ? item.category : item.role}</span>
-        <h3>{isJob ? item.title : item.name}</h3>
+        <h3>{displayName}</h3>
         <div className="pd-card-meta">
           {isJob ? (
             <>
@@ -141,14 +153,21 @@ function SwipeCard({ item, kind, top, onDecision, matchInfo }) {
             </>
           )}
         </div>
-        <p className="pd-card-blurb">{item.blurb}</p>
+        {!hideIdentity && <p className="pd-card-blurb">{item.blurb}</p>}
         {isJob && <p className="pd-card-salary">{item.salary}<small> bruto / mnd</small></p>}
         <div className="pd-card-skills">
           {item.skills.slice(0, 4).map((s) => (
             <span key={s} className={matchInfo?.shared?.includes(s) ? "is-shared" : ""}>{s}</span>
           ))}
         </div>
-        {matchInfo && <p className="pd-card-reason"><Sparkle size={13} weight="fill" /> {matchInfo.reasons[0]}</p>}
+        {matchInfo && (
+          <div className="pd-card-reasons">
+            <span className="pd-reasons-title"><Sparkle size={12} weight="fill" /> Waarom jullie matchen</span>
+            {matchInfo.reasons.slice(0, 3).map((r, idx) => (
+              <span key={idx} className="pd-reason-line"><Check size={12} weight="bold" /> {r}</span>
+            ))}
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -156,7 +175,7 @@ function SwipeCard({ item, kind, top, onDecision, matchInfo }) {
 
 // --- Swipe deck (Ontdek tab) -------------------------------------------------
 
-function SwipeDeck({ items, kind, scores, onMatch }) {
+function SwipeDeck({ items, kind, scores, onMatch, blind, onToggleBlind }) {
   const [index, setIndex] = useState(0);
   const [flash, setFlash] = useState(null);
 
@@ -175,7 +194,14 @@ function SwipeDeck({ items, kind, scores, onMatch }) {
 
   return (
     <div className="pd-deck">
-      <div className="pd-deck-hint"><ThumbsDown size={15} /> Veeg voor je keuze <ThumbsUp size={15} /></div>
+      {kind === "candidate" ? (
+        <button className={`pd-blind-toggle ${blind ? "is-on" : ""}`} onClick={onToggleBlind}>
+          {blind ? <EyeSlash size={16} weight="fill" /> : <Eye size={16} />}
+          {blind ? "Bias-vrij aan · namen verborgen" : "Bias-vrij uit · namen zichtbaar"}
+        </button>
+      ) : (
+        <div className="pd-deck-hint"><ThumbsDown size={15} /> Veeg voor je keuze <ThumbsUp size={15} /></div>
+      )}
       <div className="pd-stack">
         {done ? (
           <div className="pd-deck-empty">
@@ -186,7 +212,7 @@ function SwipeDeck({ items, kind, scores, onMatch }) {
         ) : (
           remaining.map((item, i) => (
             <SwipeCard key={item.id} item={item} kind={kind} top={i === 0}
-              matchInfo={scores[item.id]} onDecision={decide} />
+              matchInfo={scores[item.id]} onDecision={decide} blind={blind} />
           )).reverse()
         )}
         {flash && <div className={`pd-flash pd-flash-${flash}`} />}
@@ -203,17 +229,26 @@ function SwipeDeck({ items, kind, scores, onMatch }) {
 
 // --- Match bottom sheet ------------------------------------------------------
 
-function MatchSheet({ item, kind, score, onChat, onClose }) {
+function MatchSheet({ item, kind, score, wasBlind, onChat, onClose }) {
   return (
     <div className="pd-sheet-scrim" onClick={onClose}>
       <motion.div className="pd-sheet" onClick={(e) => e.stopPropagation()}
         initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
         transition={{ type: "spring", stiffness: 320, damping: 32 }}>
         <div className="pd-sheet-grip" />
-        <img className="pd-sheet-photo" src={`./${item.image}.webp`} alt="" />
+        {wasBlind && (
+          <motion.span className="pd-reveal-tag"
+            initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <ShieldCheck size={13} weight="fill" /> Identiteit onthuld na wederzijdse interesse
+          </motion.span>
+        )}
+        <motion.img className="pd-sheet-photo" src={`./${item.image}.webp`} alt=""
+          initial={wasBlind ? { filter: "blur(18px)", scale: 1.1, opacity: 0.6 } : false}
+          animate={{ filter: "blur(0px)", scale: 1, opacity: 1 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 }} />
         <span className="pd-sheet-score"><Sparkle size={15} weight="fill" /> {score}% match</span>
         <h3>Het is een match!</h3>
-        <p>Jij en {titleOf(item, kind)} toonden allebei interesse. Start het gesprek.</p>
+        <p>Jij en {titleOf(item, kind)} toonden allebei interesse. Start het gesprek binnen 48 uur.</p>
         <button className="pd-primary" onClick={onChat}><ChatCircleDots size={18} weight="fill" /> Stuur een bericht</button>
         <button className="pd-secondary" onClick={onClose}>Verder swipen</button>
       </motion.div>
@@ -277,6 +312,7 @@ function MatchChat({ match, kind, onBack }) {
       </header>
       <div className="pd-chat-scroll" ref={scroller}>
         <div className="pd-match-banner"><Heart size={16} weight="fill" /> Match · {match.score}%</div>
+        <div className="pd-urgency-chip"><Timer size={13} weight="fill" /> Reageer binnen 48 uur, anders vervalt de match</div>
         {messages.map((m, i) => (
           <div key={i} className={`pd-bubble pd-bubble-${m.from}`}>
             {m.ai && <span className="pd-ai-tag"><Sparkle size={11} weight="fill" /> AI-ijsbreker</span>}
@@ -357,6 +393,8 @@ function AppShell({ kind, profile, feedItems, onExit }) {
   const [matches, setMatches] = useState([]);
   const [sheet, setSheet] = useState(null);
   const [chat, setChat] = useState(null);
+  // Bias-free swipe: employer sees candidates without name/photo until a mutual match.
+  const [blind, setBlind] = useState(true);
 
   const profileSkills = profile.skills || profile.suggestedSkills || [];
 
@@ -392,7 +430,8 @@ function AppShell({ kind, profile, feedItems, onExit }) {
                 <h3>{kind === "job" ? "Ontdek banen" : "Ontdek talent"}</h3>
                 <p>Swipe of tik. Bij interesse van beide kanten: match.</p>
               </div>
-              <SwipeDeck items={feedItems} kind={kind} scores={scores} onMatch={registerMatch} />
+              <SwipeDeck items={feedItems} kind={kind} scores={scores} onMatch={registerMatch}
+                blind={blind} onToggleBlind={() => setBlind((b) => !b)} />
             </motion.div>
           )}
           {tab === "matches" && (
@@ -422,6 +461,7 @@ function AppShell({ kind, profile, feedItems, onExit }) {
         <AnimatePresence>
           {sheet && !chat && (
             <MatchSheet key="sheet" item={sheet.item} kind={kind} score={sheet.score}
+              wasBlind={blind && kind === "candidate"}
               onChat={() => { setChat(sheet); setSheet(null); }} onClose={() => setSheet(null)} />
           )}
         </AnimatePresence>

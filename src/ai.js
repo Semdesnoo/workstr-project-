@@ -124,11 +124,16 @@ export async function matchScore({ profileSkills = [], jobSkills = [] } = {}) {
   // Deterministic-ish score so the same pair looks stable, with a believable range.
   const base = 62 + overlap.length * 9;
   const score = Math.min(97, base + (profileSkills.length % 5));
+  // Always return exactly 3 concrete "why we match" reasons (transparency).
   const reasons = [];
-  if (overlap.length) reasons.push(`Gedeelde skills: ${overlap.slice(0, 3).join(", ")}`);
-  reasons.push("Ervaringsniveau sluit aan op de functie");
-  reasons.push("Voorkeuren rond werkplek en tempo komen overeen");
-  return { score, reasons };
+  if (overlap.length >= 1) {
+    reasons.push(`Deelt ${overlap.length} kernvaardighe${overlap.length === 1 ? "id" : "den"}: ${overlap.slice(0, 3).join(", ")}`);
+  } else {
+    reasons.push("Aansluitend profiel op de gevraagde vaardigheden");
+  }
+  reasons.push("Ervaringsniveau past bij het gevraagde niveau");
+  reasons.push("Voorkeuren rond uren, werkplek en beschikbaarheid komen overeen");
+  return { score, reasons: reasons.slice(0, 3) };
 }
 
 /**

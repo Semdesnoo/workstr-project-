@@ -225,6 +225,46 @@ label.pd-primary { position: relative; }
 .pd-card-reason { margin: 2px 0 0; font-size: 12.5px; display: flex; align-items: center; gap: 5px; opacity: 0.95; }
 .pd-card-reason svg { color: #fff; flex: none; }
 
+/* --- 3 AI match reasons on the card --- */
+.pd-card-reasons { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,0.32); backdrop-filter: blur(4px); }
+.pd-reasons-title { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.9; }
+.pd-reasons-title svg { color: var(--u-accent); }
+.pd-reason-line { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; line-height: 1.35; opacity: 0.95; }
+.pd-reason-line svg { color: var(--u-accent); flex: none; margin-top: 2px; }
+
+/* --- Bias-free blind swiping --- */
+.pd-blind-toggle {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; align-self: center;
+  padding: 8px 14px; border-radius: 999px; cursor: pointer; border: 1px solid var(--u-line);
+  background: var(--u-bg); color: var(--u-muted); font: inherit; font-size: 12px; font-weight: 600; flex: none;
+}
+.pd-blind-toggle.is-on { background: var(--u-text); color: var(--u-primary-text); border-color: var(--u-text); }
+.pd-card.is-blind .pd-card-blindbg {
+  position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
+  background: linear-gradient(150deg, #2a2a2a, #050505);
+}
+.pd-card-blindtag {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 6px;
+  background: var(--u-accent); color: #fff; margin-bottom: 2px;
+}
+
+/* --- Reveal at match --- */
+.pd-reveal-tag {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+  color: var(--u-accent); background: color-mix(in srgb, var(--u-accent) 14%, transparent);
+  padding: 5px 11px; border-radius: 999px;
+}
+
+/* --- 48u urgency chip in chat --- */
+.pd-urgency-chip {
+  align-self: center; display: inline-flex; align-items: center; gap: 6px; text-align: center;
+  font-size: 11.5px; font-weight: 600; color: var(--u-text);
+  background: color-mix(in srgb, #e0a020 20%, transparent);
+  padding: 6px 12px; border-radius: 999px; margin-bottom: 8px;
+}
+.pd-urgency-chip svg { color: #c67d10; flex: none; }
+
 .pd-match-badge { position: absolute; top: 14px; right: 14px; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 74px; height: 74px; border-radius: 50%; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2); }
 .pd-ring { position: absolute; inset: 0; margin: auto; }
 .pd-match-badge b { font-size: 18px; line-height: 1; }
