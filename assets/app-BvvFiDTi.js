@@ -1,1 +1,0 @@
-import{_ as e,g as t,h as n,n as r,v as i}from"./ProductDemo-oeFfNX_N.js";i();var a=e(),o=t();(0,a.createRoot)(document.getElementById(`root`)).render((0,o.jsx)(n,{reducedMotion:`user`,children:(0,o.jsx)(r,{})}));
