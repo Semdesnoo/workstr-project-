@@ -566,26 +566,37 @@ function StatusBar({ platform }) {
 function LoginScreen({ onLogin }) {
   return (
     <motion.div className="pd-slide pd-login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <div className="pd-login-top">
-        <img className="pd-login-logo" src="./logo.png" alt="Workstr" />
-        <h2>Welkom bij Workstr</h2>
-        <p>Swipe naar je volgende baan. Of naar je volgende talent.</p>
+      <div className="pd-login-hero">
+        <img className="pd-login-hero-img" src="./creative.webp" alt="" />
+        <div className="pd-login-hero-shade" />
+        <div className="pd-login-hero-content">
+          <img className="pd-login-wordmark" src="./logo.png" alt="Workstr" />
+          <h2>Vind werk dat<br />bij je past.</h2>
+          <p>Swipe. Match. Praat. Zo simpel.</p>
+        </div>
       </div>
-      <form className="pd-login-form" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
-        <label className="pd-field">
-          <Envelope size={18} />
-          <input type="email" name="email" autoComplete="email" placeholder="E-mailadres" defaultValue="demo@workstr.com" />
-        </label>
-        <label className="pd-field">
-          <Lock size={18} />
-          <input type="password" name="password" autoComplete="off" placeholder="Wachtwoord" defaultValue="demo" />
-        </label>
-        <button className="pd-primary" type="submit">Inloggen <ArrowRight size={18} /></button>
-        <div className="pd-or"><span>of</span></div>
-        <button className="pd-oauth" type="button" onClick={onLogin}><AppleLogo size={19} weight="fill" /> Doorgaan met Apple</button>
-        <button className="pd-oauth" type="button" onClick={onLogin}><GoogleLogo size={18} weight="bold" /> Doorgaan met Google</button>
-        <p className="pd-login-note">Voorbeeld: klik op Inloggen om direct door te gaan.</p>
-      </form>
+      <motion.div className="pd-login-sheet"
+        initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}>
+        <form className="pd-login-form" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
+          <label className="pd-field">
+            <Envelope size={18} />
+            <input type="email" name="email" autoComplete="email" placeholder="E-mailadres" defaultValue="demo@workstr.com" />
+          </label>
+          <label className="pd-field">
+            <Lock size={18} />
+            <input type="password" name="password" autoComplete="off" placeholder="Wachtwoord" defaultValue="demo" />
+          </label>
+          <button className="pd-primary pd-login-cta" type="submit">Inloggen <ArrowRight size={18} /></button>
+          <div className="pd-or"><span>of ga verder met</span></div>
+          <div className="pd-oauth-row">
+            <button className="pd-oauth" type="button" onClick={onLogin} aria-label="Doorgaan met Apple"><AppleLogo size={22} weight="fill" /></button>
+            <button className="pd-oauth" type="button" onClick={onLogin} aria-label="Doorgaan met Google"><GoogleLogo size={20} weight="bold" /></button>
+          </div>
+          <p className="pd-login-note">Nog geen account? <b>Gratis aanmelden</b></p>
+          <p className="pd-login-demo">Voorbeeld: elke knop gaat direct door.</p>
+        </form>
+      </motion.div>
     </motion.div>
   );
 }
@@ -696,7 +707,7 @@ export default function ProductDemo({ open, onClose }) {
 // --- Root: standalone full-screen app (its own page) -------------------------
 
 export function StandaloneApp() {
-  const [platform, setPlatform] = useState(detectPlatform);
+  const [platform, setPlatform] = useState("ios");
   return (
     <div className={`pd-standalone-root pd-stage-${platform}`}>
       <PhoneShell standalone platform={platform} />

@@ -386,28 +386,48 @@ label.pd-primary { position: relative; }
 /* topbar sits right under the status bar now */
 .pd-phone .pd-topbar { padding-top: 4px; }
 
-/* --- Login screen --- */
-.pd-login { padding: 16px 22px 18px; display: flex; flex-direction: column; justify-content: flex-start; gap: 14px; overflow-y: auto; }
-.pd-login-logo { width: 118px; height: auto; margin-bottom: 2px; }
-.pd-login-top { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.pd-login-top h2 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
-.pd-login-top p { margin: 0; color: var(--u-muted); font-size: 15px; max-width: 30ch; line-height: 1.45; }
-.pd-login-form { display: flex; flex-direction: column; gap: 12px; }
-.pd-field {
-  display: flex; align-items: center; gap: 10px; padding: 0 14px;
-  border: 1px solid var(--u-line); border-radius: var(--u-radius); background: var(--u-bg);
+/* --- Login screen: photo hero + form sheet --- */
+.pd-login { padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+.pd-login-hero { position: relative; flex: 1 1 44%; min-height: 200px; overflow: hidden; }
+.pd-login-hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pd-login-hero-shade {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.15) 40%, var(--u-bg) 100%),
+              linear-gradient(0deg, rgba(0,0,0,0.35), transparent 55%);
 }
+.pd-login-hero-content { position: absolute; left: 0; right: 0; bottom: 0; padding: 24px 24px 8px; color: #fff; }
+.pd-login-wordmark { height: 26px; width: auto; margin-bottom: 14px; filter: brightness(0) invert(1); }
+.pd-login-hero-content h2 { margin: 0; font-size: 32px; line-height: 1.02; font-weight: 800; letter-spacing: -0.035em; color: #fff; }
+.pd-login-hero-content p { margin: 8px 0 0; font-size: 15px; color: rgba(255,255,255,0.9); font-weight: 500; }
+
+.pd-login-sheet { flex: 0 0 auto; background: var(--u-bg); padding: 8px 24px 22px; }
+.pd-login-form { display: flex; flex-direction: column; gap: 11px; }
+.pd-field {
+  display: flex; align-items: center; gap: 10px; padding: 0 15px;
+  border: 1px solid var(--u-line); border-radius: 14px; background: var(--u-elevated);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.pd-field:focus-within { border-color: var(--u-text); background: var(--u-bg); }
 .pd-field svg { color: var(--u-muted); flex: none; }
 .pd-field input { flex: 1; border: none; background: none; outline: none; font: inherit; font-size: 15px; color: var(--u-text); padding: 15px 0; }
-.pd-or { display: flex; align-items: center; gap: 12px; color: var(--u-muted); font-size: 12px; margin: 2px 0; }
+.pd-login-cta { border-radius: 14px; margin-top: 3px; box-shadow: 0 8px 20px rgba(0,0,0,0.16); }
+
+.pd-or { display: flex; align-items: center; gap: 12px; color: var(--u-muted); font-size: 12px; margin: 3px 0; }
 .pd-or::before, .pd-or::after { content: ""; flex: 1; height: 1px; background: var(--u-line); }
+
+.pd-oauth-row { display: flex; gap: 11px; }
 .pd-oauth {
-  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 14px 20px; border-radius: var(--u-radius); border: 1px solid var(--u-line);
-  background: var(--u-bg); color: var(--u-text); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+  flex: 1; display: inline-flex; align-items: center; justify-content: center;
+  padding: 13px; border-radius: 14px; border: 1px solid var(--u-line);
+  background: var(--u-bg); color: var(--u-text); cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
 }
 .pd-oauth:hover { background: var(--u-elevated); }
-.pd-login-note { text-align: center; color: var(--u-muted); font-size: 12px; margin: 4px 0 0; }
+.pd-oauth:active { transform: scale(0.97); }
+.pd-login-note { text-align: center; color: var(--u-muted); font-size: 13.5px; margin: 6px 0 0; }
+.pd-login-note b { color: var(--u-text); font-weight: 700; }
+.pd-login-demo { text-align: center; color: var(--u-muted); font-size: 11.5px; margin: 0; opacity: 0.75; }
 
 /* --- Device toggle (standalone only) --- */
 .pd-os-toggle {
