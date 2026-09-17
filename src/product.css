@@ -387,7 +387,9 @@ label.pd-primary { position: relative; }
 .pd-phone .pd-topbar { padding-top: 4px; }
 
 /* --- Login screen --- */
-.pd-login { padding: 18px 22px; display: flex; flex-direction: column; justify-content: center; gap: 16px; overflow-y: auto; }
+.pd-login { padding: 12px 22px 18px; display: flex; flex-direction: column; justify-content: flex-start; gap: 14px; overflow-y: auto; }
+.pd-login-top { margin-top: auto; }
+.pd-login-form { margin-bottom: auto; }
 .pd-login-logo { width: 128px; height: auto; margin-bottom: 4px; }
 .pd-login-top { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .pd-login-top h2 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
