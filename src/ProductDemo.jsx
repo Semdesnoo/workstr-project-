@@ -452,6 +452,170 @@ function AppShell({ kind, profile, feedItems, onExit }) {
 
 // --- Onboarding: candidate ---------------------------------------------------
 
+// Standard questions for the "no CV yet" guided flow. Each builds part of the profile.
+const FIELD_OPTIONS = [
+  { label: "Creatief & Design", role: "Creatief Professional", skills: ["Figma", "Adobe Suite", "Branding", "Illustratie", "UX/UI", "Fotografie"] },
+  { label: "Tech & IT", role: "IT Professional", skills: ["React", "JavaScript", "Python", "SQL", "IT-support", "Data-analyse"] },
+  { label: "Hospitality", role: "Hospitality Professional", skills: ["Gastvrijheid", "Koffie", "Bediening", "Voorraadbeheer", "Klantcontact"] },
+  { label: "Sales & Commercieel", role: "Commercieel Talent", skills: ["Sales", "Onderhandelen", "Accountbeheer", "Klantcontact", "Presenteren"] },
+  { label: "Bouw & Techniek", role: "Technisch Vakman", skills: ["Lassen", "Montage", "VCA", "Techniek", "Kwaliteitscontrole"] },
+  { label: "Zorg & Welzijn", role: "Zorgprofessional", skills: ["Verzorging", "EHBO", "Communicatie", "Planning", "Empathie"] },
+  { label: "Administratie", role: "Administratief Talent", skills: ["Excel", "Planning", "Administratie", "Nauwkeurigheid", "Communicatie"] },
+  { label: "Iets anders", role: "Veelzijdige Professional", skills: ["Samenwerken", "Communicatie", "Plannen", "Klantcontact", "Nederlands", "Engels"] },
+];
+const EXP_OPTIONS = ["Starter (0-1 jaar)", "1-3 jaar", "3-6 jaar", "6+ jaar"];
+const HOURS_OPTIONS = ["Tot 16 uur", "16-24 uur", "24-32 uur", "32-40 uur"];
+const AVAIL_OPTIONS = ["Per direct", "Binnen 1 maand", "1-3 maanden"];
+const EDU_OPTIONS = ["VMBO", "MBO", "HBO", "WO", "Anders"];
+const CERT_OPTIONS = ["VCA", "Rijbewijs B", "EHBO/BHV", "Heftruckcertificaat", "Taalcertificaat", "Geen"];
+
+function buildProfileFromAnswers(a) {
+  const field = FIELD_OPTIONS.find((f) => f.label === a.field) || FIELD_OPTIONS[FIELD_OPTIONS.length - 1];
+  const skills = (a.skills || []).length ? a.skills : field.skills.slice(0, 4);
+  const certs = (a.certs || []).filter((c) => c !== "Geen");
+  return {
+    name: a.name || "Nieuw talent",
+    role: field.role,
+    location: a.location || "Nederland",
+    headline: `${field.role} met ${a.experience || "ervaring"}.`,
+    summary:
+      `${a.name || "Deze kandidaat"} zoekt werk in ${field.label.toLowerCase()} ` +
+      `(${a.hours || "flexibel"}, ${(a.availability || "beschikbaar").toLowerCase()}). ` +
+      (a.about ? a.about : "Profiel opgebouwd via de begeleide vragenlijst, zonder cv."),
+    skills,
+    experience: [{ title: field.role, org: a.education ? `Opleiding: ${a.education}` : "Werkervaring", period: a.experience || "" }],
+    certificates: certs.length ? certs : ["Nog geen certificaten opgegeven"],
+  };
+}
+
+function ChipGroup({ options, value, onChange, multi }) {
+  function toggle(opt) {
+    if (multi) {
+      const set = new Set(value || []);
+      set.has(opt) ? set.delete(opt) : set.add(opt);
+      onChange([...set]);
+    } else {
+      onChange(opt);
+    }
+  }
+  const isOn = (opt) => (multi ? (value || []).includes(opt) : value === opt);
+  return (
+    <div className="pd-wiz-chips">
+      {options.map((opt) => (
+        <button key={opt} type="button" className={`pd-wiz-chip ${isOn(opt) ? "is-on" : ""}`} onClick={() => toggle(opt)}>
+          {isOn(opt) && <Check size={14} weight="bold" />} {opt}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CvBuilderWizard({ onComplete, onCancel }) {
+  const [i, setI] = useState(0);
+  const [a, setA] = useState({ name: "", location: "", field: "", experience: "", skills: [], hours: "", availability: "", education: "", certs: [], about: "" });
+  const set = (k, v) => setA((p) => ({ ...p, [k]: v }));
+
+  const field = FIELD_OPTIONS.find((f) => f.label === a.field);
+  const skillPool = field ? field.skills : [];
+
+  const steps = [
+    {
+      title: "Hoe heet je?", sub: "We bouwen samen je profiel op, ook zonder cv.",
+      valid: () => a.name.trim().length > 1,
+      body: (
+        <input className="pd-wiz-input" autoFocus value={a.name} maxLength={60}
+          onChange={(e) => set("name", e.target.value)} placeholder="Voor- en achternaam" />
+      ),
+    },
+    {
+      title: "Waar woon je?", sub: "Zo vinden we banen bij jou in de buurt.",
+      valid: () => a.location.trim().length > 1,
+      body: (
+        <input className="pd-wiz-input" autoFocus value={a.location} maxLength={60}
+          onChange={(e) => set("location", e.target.value)} placeholder="Bijv. Utrecht" />
+      ),
+    },
+    {
+      title: "Welk werk zoek je?", sub: "Kies de richting die het beste past.",
+      valid: () => !!a.field,
+      body: <ChipGroup options={FIELD_OPTIONS.map((f) => f.label)} value={a.field} onChange={(v) => { set("field", v); set("skills", []); }} />,
+    },
+    {
+      title: "Hoeveel werkervaring heb je?", sub: "Een grove inschatting is prima.",
+      valid: () => !!a.experience,
+      body: <ChipGroup options={EXP_OPTIONS} value={a.experience} onChange={(v) => set("experience", v)} />,
+    },
+    {
+      title: "Wat zijn je sterkste punten?", sub: "Kies er een paar. Meerdere mag.",
+      valid: () => (a.skills || []).length > 0,
+      body: <ChipGroup options={skillPool} value={a.skills} onChange={(v) => set("skills", v)} multi />,
+    },
+    {
+      title: "Hoeveel uur wil je werken?", sub: "",
+      valid: () => !!a.hours,
+      body: <ChipGroup options={HOURS_OPTIONS} value={a.hours} onChange={(v) => set("hours", v)} />,
+    },
+    {
+      title: "Wanneer kun je starten?", sub: "",
+      valid: () => !!a.availability,
+      body: <ChipGroup options={AVAIL_OPTIONS} value={a.availability} onChange={(v) => set("availability", v)} />,
+    },
+    {
+      title: "Wat is je opleidingsniveau?", sub: "",
+      valid: () => !!a.education,
+      body: <ChipGroup options={EDU_OPTIONS} value={a.education} onChange={(v) => set("education", v)} />,
+    },
+    {
+      title: "Heb je certificaten?", sub: "Kies wat je hebt. Meerdere mag.",
+      valid: () => (a.certs || []).length > 0,
+      body: <ChipGroup options={CERT_OPTIONS} value={a.certs} onChange={(v) => set("certs", v)} multi />,
+    },
+    {
+      title: "Vertel kort iets over jezelf", sub: "Optioneel. Dit komt in je profiel.",
+      valid: () => true,
+      body: (
+        <textarea className="pd-wiz-textarea" value={a.about} maxLength={280} rows={4}
+          onChange={(e) => set("about", e.target.value)} placeholder="Bijv. Ik werk graag in een team en leer snel nieuwe dingen." />
+      ),
+    },
+  ];
+
+  const cur = steps[i];
+  const last = i === steps.length - 1;
+  const pct = Math.round(((i + 1) / steps.length) * 100);
+
+  function next() {
+    if (!cur.valid()) return;
+    if (last) { onComplete(buildProfileFromAnswers(a)); return; }
+    setI((n) => n + 1);
+  }
+  function back() { i === 0 ? onCancel() : setI((n) => n - 1); }
+
+  return (
+    <div className="pd-wiz">
+      <div className="pd-wiz-top">
+        <button className="pd-back" onClick={back}><CaretLeft size={16} /> Terug</button>
+        <div className="pd-wiz-progress"><span style={{ width: `${pct}%` }} /></div>
+        <span className="pd-wiz-count">Vraag {i + 1} van {steps.length}</span>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div key={i} className="pd-wiz-body"
+          initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}>
+          <h2>{cur.title}</h2>
+          {cur.sub && <p className="pd-wiz-sub">{cur.sub}</p>}
+          <div className="pd-wiz-field">{cur.body}</div>
+        </motion.div>
+      </AnimatePresence>
+      <div className="pd-wiz-footer">
+        <button className="pd-primary" onClick={next} disabled={!cur.valid()}>
+          {last ? "Maak mijn profiel" : "Volgende"} <ArrowRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CandidateOnboarding({ onReady }) {
   const [step, setStep] = useState("upload");
   const [fileName, setFileName] = useState("");
@@ -460,6 +624,11 @@ function CandidateOnboarding({ onReady }) {
     setStep("analyzing");
     const result = await analyzeCV({ text, fileName: "cv.pdf", name });
     onReady(result);
+  }
+
+  function finishWizard(profile) {
+    setStep("building");
+    setTimeout(() => onReady(profile), 2000);
   }
 
   if (step === "upload") {
@@ -473,11 +642,31 @@ function CandidateOnboarding({ onReady }) {
           <input type="file" accept=".pdf,.doc,.docx,.txt" hidden
             onChange={(e) => { const f = e.target.files?.[0]; setFileName(f?.name || ""); run(f?.name || "", ""); }} />
         </label>
+        <button className="pd-secondary" onClick={() => setStep("build")}>Ik heb nog geen cv</button>
         <button className="pd-ghost" onClick={() => run("figma branding design", "Sanne de Vries")}>Of gebruik een voorbeeld-cv</button>
         <span className="pd-fineprint">Demo: je bestand blijft op je apparaat en wordt niet verstuurd.</span>
       </div>
     );
   }
+
+  if (step === "build") {
+    return <CvBuilderWizard onComplete={finishWizard} onCancel={() => setStep("upload")} />;
+  }
+
+  if (step === "building") {
+    return (
+      <div className="pd-screen pd-analyzing">
+        <motion.div className="pd-scan" animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.4, repeat: Infinity }}><Sparkle size={40} weight="fill" /></motion.div>
+        <h2>We bouwen je profiel…</h2>
+        <ul className="pd-steps">
+          <li><Check size={15} weight="bold" /> Je antwoorden verwerken</li>
+          <li><Check size={15} weight="bold" /> Skills en voorkeuren ordenen</li>
+          <li><Typing /> Je matches klaarzetten</li>
+        </ul>
+      </div>
+    );
+  }
+
   return (
     <div className="pd-screen pd-analyzing">
       <motion.div className="pd-scan" animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 1.4, repeat: Infinity }}><Sparkle size={40} weight="fill" /></motion.div>

@@ -152,6 +152,34 @@ label.pd-primary { position: relative; }
 .pd-choice small { color: var(--u-muted); font-size: 13.5px; margin-top: 2px; }
 .pd-choice > svg:last-child { color: var(--u-muted); }
 
+/* --- CV builder wizard (no-CV guided flow) --- */
+.pd-wiz { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.pd-wiz-top { padding: 6px 20px 10px; display: flex; flex-direction: column; gap: 8px; flex: none; }
+.pd-wiz-top .pd-back { padding: 4px 0; }
+.pd-wiz-progress { height: 6px; border-radius: 999px; background: var(--u-elevated); overflow: hidden; }
+.pd-wiz-progress span { display: block; height: 100%; background: var(--u-text); border-radius: 999px; transition: width 0.35s cubic-bezier(0.16,1,0.3,1); }
+.pd-wiz-count { font-size: 12px; color: var(--u-muted); font-weight: 600; }
+.pd-wiz-body { flex: 1; overflow-y: auto; padding: 8px 20px 12px; }
+.pd-wiz-body h2 { margin: 6px 0 0; font-size: 25px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.12; }
+.pd-wiz-sub { margin: 8px 0 0; color: var(--u-muted); font-size: 14.5px; line-height: 1.45; }
+.pd-wiz-field { margin-top: 18px; }
+.pd-wiz-input, .pd-wiz-textarea {
+  width: 100%; border: 1px solid var(--u-line); border-radius: 14px; background: var(--u-elevated);
+  color: var(--u-text); font: inherit; font-size: 16px; padding: 15px; outline: none;
+}
+.pd-wiz-input:focus, .pd-wiz-textarea:focus { border-color: var(--u-text); background: var(--u-bg); }
+.pd-wiz-textarea { resize: none; }
+.pd-wiz-chips { display: flex; flex-wrap: wrap; gap: 9px; }
+.pd-wiz-chip {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  padding: 11px 15px; border-radius: 999px; border: 1.5px solid var(--u-line);
+  background: var(--u-bg); color: var(--u-text); font: inherit; font-size: 14.5px; font-weight: 600;
+  transition: border-color 0.12s ease, background 0.12s ease, transform 0.12s ease;
+}
+.pd-wiz-chip:active { transform: scale(0.97); }
+.pd-wiz-chip.is-on { border-color: var(--u-text); background: var(--u-text); color: var(--u-primary-text); }
+.pd-wiz-footer { flex: none; padding: 10px 20px 18px; }
+
 /* --- App shell + bottom nav --- */
 .pd-app { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .pd-app-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; }
