@@ -139,8 +139,8 @@ label.pd-primary { position: relative; }
 .pd-improve li { display: flex; align-items: center; gap: 8px; font-size: 15px; }
 .pd-improve svg { color: var(--u-accent); flex: none; }
 
-/* --- Role choose (Uber-style rows) --- */
-.pd-choose { padding: 20px; align-items: stretch; justify-content: center; text-align: left; gap: 12px; }
+/* --- Choose screen (Uber-style rows) --- */
+.pd-choose { padding: 20px; align-items: stretch; justify-content: center; text-align: center; gap: 12px; }
 .pd-choose h2 { font-size: 30px; }
 .pd-choose > p { margin-bottom: 6px; }
 .pd-choice { display: flex; align-items: center; gap: 16px; text-align: left; padding: 18px; border-radius: var(--u-radius); border: none; background: var(--u-elevated); color: var(--u-text); cursor: pointer; transition: transform 0.12s ease; }
