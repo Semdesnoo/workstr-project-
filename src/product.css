@@ -324,3 +324,102 @@ label.pd-primary { position: relative; }
     margin: 0; width: 100vw; height: 100dvh; border-radius: 0; border: none; box-shadow: none;
   }
 }
+
+/* ===================================================================
+   Realistic device chrome: OS status bar, home indicator, login,
+   iOS vs Android frame styling, and the device toggle.
+   =================================================================== */
+
+/* The phone becomes a column: status bar | app | home bar. */
+.pd-phone { position: relative; }
+
+/* --- OS status bar (top) --- */
+.pd-os-statusbar {
+  flex: none;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  position: relative;
+  color: var(--u-text);
+  font-variant-numeric: tabular-nums;
+  z-index: 6;
+}
+.pd-os-time { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; min-width: 54px; }
+.pd-os-icons { display: inline-flex; align-items: center; gap: 6px; min-width: 54px; justify-content: flex-end; }
+.pd-os-icons svg { color: var(--u-text); }
+/* iOS Dynamic Island */
+.pd-os-island {
+  position: absolute; left: 50%; top: 9px; transform: translateX(-50%);
+  width: 92px; height: 26px; border-radius: 999px; background: #000;
+}
+/* Android punch-hole camera */
+.pd-os-punch {
+  position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
+  width: 9px; height: 9px; border-radius: 50%; background: #000;
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.15);
+}
+.pd-os-android .pd-os-time { font-weight: 600; }
+.pd-os-android .pd-os-icons { gap: 5px; }
+
+/* --- Home indicator / nav (bottom) --- */
+.pd-homebar { flex: none; z-index: 6; }
+.pd-home-ios { height: 22px; position: relative; }
+.pd-home-ios::after {
+  content: ""; position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%);
+  width: 134px; height: 5px; border-radius: 999px; background: var(--u-text); opacity: 0.85;
+}
+.pd-home-android { height: 24px; position: relative; }
+.pd-home-android::after {
+  content: ""; position: absolute; left: 50%; bottom: 9px; transform: translateX(-50%);
+  width: 108px; height: 4px; border-radius: 999px; background: var(--u-muted); opacity: 0.7;
+}
+
+/* --- Frame shape differences --- */
+.pd-phone.pd-frame-ios { border-radius: 46px; }
+.pd-phone.pd-frame-android { border-radius: 30px; }
+@media (max-width: 440px) {
+  .pd-phone.pd-frame-ios, .pd-phone.pd-frame-android { border-radius: 0; }
+}
+
+/* topbar sits right under the status bar now */
+.pd-phone .pd-topbar { padding-top: 4px; }
+
+/* --- Login screen --- */
+.pd-login { padding: 8px 22px 18px; display: flex; flex-direction: column; justify-content: center; gap: 18px; overflow-y: auto; }
+.pd-login-top { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pd-login-logo { width: 140px; height: auto; margin-bottom: 6px; }
+.pd-login-top h2 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
+.pd-login-top p { margin: 0; color: var(--u-muted); font-size: 15px; max-width: 30ch; line-height: 1.45; }
+.pd-login-form { display: flex; flex-direction: column; gap: 12px; }
+.pd-field {
+  display: flex; align-items: center; gap: 10px; padding: 0 14px;
+  border: 1px solid var(--u-line); border-radius: var(--u-radius); background: var(--u-bg);
+}
+.pd-field svg { color: var(--u-muted); flex: none; }
+.pd-field input { flex: 1; border: none; background: none; outline: none; font: inherit; font-size: 15px; color: var(--u-text); padding: 15px 0; }
+.pd-or { display: flex; align-items: center; gap: 12px; color: var(--u-muted); font-size: 12px; margin: 2px 0; }
+.pd-or::before, .pd-or::after { content: ""; flex: 1; height: 1px; background: var(--u-line); }
+.pd-oauth {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px 20px; border-radius: var(--u-radius); border: 1px solid var(--u-line);
+  background: var(--u-bg); color: var(--u-text); font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.pd-oauth:hover { background: var(--u-elevated); }
+.pd-login-note { text-align: center; color: var(--u-muted); font-size: 12px; margin: 4px 0 0; }
+
+/* --- Device toggle (standalone only) --- */
+.pd-os-toggle {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px;
+  background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); z-index: 40;
+}
+.pd-os-toggle button {
+  display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;
+  padding: 8px 16px; border-radius: 999px; background: transparent; color: #fff;
+  font: inherit; font-size: 13px; font-weight: 600; opacity: 0.7;
+}
+.pd-os-toggle button.is-on { background: #fff; color: #000; opacity: 1; }
+@media (display-mode: standalone) { .pd-os-toggle { display: none; } }
+@media (max-width: 440px) { .pd-os-toggle { bottom: 10px; } }

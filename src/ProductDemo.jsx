@@ -4,7 +4,8 @@ import {
   X, FileArrowUp, Sparkle, ArrowRight, Heart, Check, ChatCircleDots,
   MapPin, Clock, Buildings, User, PaperPlaneRight, Lightning, ThumbsUp,
   ThumbsDown, CaretLeft, Star, Cards, ChatCircle, UserCircle, CaretRight,
-  SignOut,
+  SignOut, Envelope, Lock, AppleLogo, GoogleLogo, WifiHigh, CellSignalFull,
+  BatteryFull,
 } from "@phosphor-icons/react";
 import { analyzeCV, optimizeJob, matchScore, icebreaker, isLiveAI } from "./ai.js";
 import "./product.css";
@@ -529,63 +530,140 @@ function EmployerOnboarding({ onReady }) {
   );
 }
 
+// --- Device chrome + login ---------------------------------------------------
+
+function detectPlatform() {
+  const ua = (typeof navigator !== "undefined" && navigator.userAgent) || "";
+  if (/android/i.test(ua)) return "android";
+  if (/iphone|ipad|ipod/i.test(ua)) return "ios";
+  return "ios"; // default preview
+}
+
+function useClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 20000);
+    return () => clearInterval(t);
+  }, []);
+  return now.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+}
+
+function StatusBar({ platform }) {
+  const time = useClock();
+  return (
+    <div className={`pd-os-statusbar pd-os-${platform}`}>
+      <span className="pd-os-time">{time}</span>
+      {platform === "ios" ? <span className="pd-os-island" /> : <span className="pd-os-punch" />}
+      <span className="pd-os-icons">
+        <CellSignalFull size={15} weight="fill" />
+        <WifiHigh size={16} weight="fill" />
+        <BatteryFull size={22} weight="fill" />
+      </span>
+    </div>
+  );
+}
+
+function LoginScreen({ onLogin }) {
+  return (
+    <motion.div className="pd-slide pd-login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <div className="pd-login-top">
+        <img className="pd-login-logo" src="./logo.png" alt="Workstr" />
+        <h2>Welkom bij Workstr</h2>
+        <p>Swipe naar je volgende baan. Of naar je volgende talent.</p>
+      </div>
+      <form className="pd-login-form" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
+        <label className="pd-field">
+          <Envelope size={18} />
+          <input type="email" name="email" autoComplete="email" placeholder="E-mailadres" defaultValue="demo@workstr.com" />
+        </label>
+        <label className="pd-field">
+          <Lock size={18} />
+          <input type="password" name="password" autoComplete="off" placeholder="Wachtwoord" defaultValue="demo" />
+        </label>
+        <button className="pd-primary" type="submit">Inloggen <ArrowRight size={18} /></button>
+        <div className="pd-or"><span>of</span></div>
+        <button className="pd-oauth" type="button" onClick={onLogin}><AppleLogo size={19} weight="fill" /> Doorgaan met Apple</button>
+        <button className="pd-oauth" type="button" onClick={onLogin}><GoogleLogo size={18} weight="bold" /> Doorgaan met Google</button>
+        <p className="pd-login-note">Voorbeeld: klik op Inloggen om direct door te gaan.</p>
+      </form>
+    </motion.div>
+  );
+}
+
 // --- Shared phone content ----------------------------------------------------
 
-function PhoneShell({ onClose, standalone }) {
+function PhoneShell({ onClose, standalone, platform: platformProp }) {
+  const [detected] = useState(detectPlatform);
+  const platform = platformProp || detected;
+  const [authed, setAuthed] = useState(false);
   const [mode, setMode] = useState(null);
   const [profile, setProfile] = useState(null);
   function reset() { setMode(null); setProfile(null); }
   const inApp = mode && profile;
 
   return (
-    <div className={`pd-phone ${standalone ? "is-standalone" : ""}`}>
-      <div className="pd-topbar">
-        <span className="pd-brand">workstr</span>
-        <span className={`pd-tag ${isLiveAI ? "pd-live" : ""}`}>{isLiveAI ? "live AI" : "demo"}</span>
-        {standalone ? (
-          <a className="pd-close" href="./index.html" aria-label="Naar de website"><X size={18} /></a>
-        ) : (
-          <button className="pd-close" onClick={onClose} aria-label="Sluiten"><X size={18} /></button>
-        )}
-      </div>
+    <div className={`pd-phone pd-frame-${platform} ${standalone ? "is-standalone" : ""}`}>
+      <StatusBar platform={platform} />
 
-      <div className="pd-viewport">
-        <AnimatePresence mode="wait">
-          {inApp ? (
-            <motion.div key="app" className="pd-slide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <AppShell
-                kind={mode === "candidate" ? "job" : "candidate"}
-                profile={profile}
-                feedItems={mode === "candidate" ? DEMO_JOBS : DEMO_CANDIDATES}
-                onExit={reset}
-              />
-            </motion.div>
-          ) : !mode ? (
-            <motion.div key="choose" className="pd-slide pd-choose" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <h2>Wie ben jij vandaag?</h2>
-              <p>Ervaar beide kanten van Workstr.</p>
-              <button className="pd-choice" onClick={() => setMode("candidate")}>
-                <span className="pd-choice-ic"><User size={24} weight="regular" /></span>
-                <span className="pd-choice-txt"><b>Ik zoek werk</b><small>Upload je cv, ontdek je matches</small></span>
-                <ArrowRight size={18} />
-              </button>
-              <button className="pd-choice" onClick={() => setMode("employer")}>
-                <span className="pd-choice-ic"><Buildings size={24} weight="regular" /></span>
-                <span className="pd-choice-txt"><b>Ik zoek talent</b><small>Plaats een vacature, vind kandidaten</small></span>
-                <ArrowRight size={18} />
-              </button>
-              <span className="pd-fineprint">Interactieve demo met fictieve data.</span>
-            </motion.div>
-          ) : (
-            <motion.div key={mode} className="pd-slide" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
-              <button className="pd-back" onClick={reset}><CaretLeft size={16} /> Terug</button>
-              {mode === "candidate"
-                ? <CandidateOnboarding onReady={setProfile} />
-                : <EmployerOnboarding onReady={setProfile} />}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {!authed ? (
+        <div className="pd-viewport">
+          <AnimatePresence mode="wait">
+            <LoginScreen key="login" onLogin={() => setAuthed(true)} />
+          </AnimatePresence>
+        </div>
+      ) : (
+        <>
+          <div className="pd-topbar">
+            <span className="pd-brand">workstr</span>
+            <span className={`pd-tag ${isLiveAI ? "pd-live" : ""}`}>{isLiveAI ? "live AI" : "demo"}</span>
+            {standalone ? (
+              <button className="pd-close" onClick={() => setAuthed(false)} aria-label="Uitloggen"><SignOut size={18} /></button>
+            ) : (
+              <button className="pd-close" onClick={onClose} aria-label="Sluiten"><X size={18} /></button>
+            )}
+          </div>
+
+          <div className="pd-viewport">
+            <AnimatePresence mode="wait">
+              {inApp ? (
+                <motion.div key="app" className="pd-slide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <AppShell
+                    kind={mode === "candidate" ? "job" : "candidate"}
+                    profile={profile}
+                    feedItems={mode === "candidate" ? DEMO_JOBS : DEMO_CANDIDATES}
+                    onExit={reset}
+                  />
+                </motion.div>
+              ) : !mode ? (
+                <motion.div key="choose" className="pd-slide pd-choose" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <h2>Wie ben jij vandaag?</h2>
+                  <p>Ervaar beide kanten van Workstr.</p>
+                  <button className="pd-choice" onClick={() => setMode("candidate")}>
+                    <span className="pd-choice-ic"><User size={24} weight="regular" /></span>
+                    <span className="pd-choice-txt"><b>Ik zoek werk</b><small>Upload je cv, ontdek je matches</small></span>
+                    <ArrowRight size={18} />
+                  </button>
+                  <button className="pd-choice" onClick={() => setMode("employer")}>
+                    <span className="pd-choice-ic"><Buildings size={24} weight="regular" /></span>
+                    <span className="pd-choice-txt"><b>Ik zoek talent</b><small>Plaats een vacature, vind kandidaten</small></span>
+                    <ArrowRight size={18} />
+                  </button>
+                  <span className="pd-fineprint">Interactieve demo met fictieve data.</span>
+                </motion.div>
+              ) : (
+                <motion.div key={mode} className="pd-slide" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
+                  <button className="pd-back" onClick={reset}><CaretLeft size={16} /> Terug</button>
+                  {mode === "candidate"
+                    ? <CandidateOnboarding onReady={setProfile} />
+                    : <EmployerOnboarding onReady={setProfile} />}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </>
+      )}
+
+      <div className={`pd-homebar pd-home-${platform}`} aria-hidden="true" />
     </div>
   );
 }
@@ -618,9 +696,18 @@ export default function ProductDemo({ open, onClose }) {
 // --- Root: standalone full-screen app (its own page) -------------------------
 
 export function StandaloneApp() {
+  const [platform, setPlatform] = useState(detectPlatform);
   return (
-    <div className="pd-standalone-root">
-      <PhoneShell standalone />
+    <div className={`pd-standalone-root pd-stage-${platform}`}>
+      <PhoneShell standalone platform={platform} />
+      <div className="pd-os-toggle" role="group" aria-label="Toestel">
+        <button className={platform === "ios" ? "is-on" : ""} onClick={() => setPlatform("ios")}>
+          <AppleLogo size={15} weight="fill" /> iOS
+        </button>
+        <button className={platform === "android" ? "is-on" : ""} onClick={() => setPlatform("android")}>
+          <GoogleLogo size={14} weight="bold" /> Android
+        </button>
+      </div>
     </div>
   );
 }
