@@ -397,7 +397,7 @@ label.pd-primary { position: relative; }
               linear-gradient(0deg, rgba(0,0,0,0.35), transparent 55%);
 }
 .pd-login-hero-content { position: absolute; left: 0; right: 0; bottom: 0; padding: 24px 24px 8px; color: #fff; }
-.pd-login-wordmark { height: 26px; width: auto; margin-bottom: 14px; filter: brightness(0) invert(1); }
+.pd-login-eyebrow { display: inline-block; font-size: 15px; font-weight: 800; letter-spacing: -0.02em; color: #fff; margin-bottom: 10px; }
 .pd-login-hero-content h2 { margin: 0; font-size: 32px; line-height: 1.02; font-weight: 800; letter-spacing: -0.035em; color: #fff; }
 .pd-login-hero-content p { margin: 8px 0 0; font-size: 15px; color: rgba(255,255,255,0.9); font-weight: 500; }
 

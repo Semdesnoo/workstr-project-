@@ -570,7 +570,7 @@ function LoginScreen({ onLogin }) {
         <img className="pd-login-hero-img" src="./creative.webp" alt="" />
         <div className="pd-login-hero-shade" />
         <div className="pd-login-hero-content">
-          <img className="pd-login-wordmark" src="./logo.png" alt="Workstr" />
+          <span className="pd-login-eyebrow">workstr</span>
           <h2>Vind werk dat<br />bij je past.</h2>
           <p>Swipe. Match. Praat. Zo simpel.</p>
         </div>
