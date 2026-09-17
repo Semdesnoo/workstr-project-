@@ -594,7 +594,6 @@ function CvBuilderWizard({ onComplete, onCancel }) {
   return (
     <div className="pd-wiz">
       <div className="pd-wiz-top">
-        <button className="pd-back" onClick={back}><CaretLeft size={16} /> Terug</button>
         <div className="pd-wiz-progress"><span style={{ width: `${pct}%` }} /></div>
         <span className="pd-wiz-count">Vraag {i + 1} van {steps.length}</span>
       </div>
@@ -608,6 +607,7 @@ function CvBuilderWizard({ onComplete, onCancel }) {
         </motion.div>
       </AnimatePresence>
       <div className="pd-wiz-footer">
+        <button className="pd-wiz-back" onClick={back} aria-label="Vorige"><CaretLeft size={20} /></button>
         <button className="pd-primary" onClick={next} disabled={!cur.valid()}>
           {last ? "Maak mijn profiel" : "Volgende"} <ArrowRight size={18} />
         </button>
