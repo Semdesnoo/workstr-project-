@@ -21,6 +21,7 @@ import {
   Pause,
 } from "@phosphor-icons/react";
 import { jobs, Reveal, Logo, JobVisual, Feed } from "./components.jsx";
+import ProductDemo from "./ProductDemo.jsx";
 import "./reference.css";
 import WorkVibe from "./WorkVibe.jsx";
 import "./playful.css";
@@ -36,22 +37,22 @@ const features = [
   {
     label: "Jouw profiel",
     title: "Je verhaal begint bij jou.",
-    text: "Het plan: je cv vormt de basis. AI helpt je ervaring en skills te vertalen naar een persoonlijk, visueel profiel.",
-    status: "Op de productroadmap",
+    text: "Upload je cv en de AI maakt er automatisch een sterk, visueel profiel van. Probeer het in de demo.",
+    status: "Werkt in de demo",
     icon: FileArrowUp,
   },
   {
     label: "Slimme matching",
     title: "Ontdek waarom het past.",
-    text: "We ontwikkelen matching op basis van relevante skills en voorkeuren, met een begrijpelijke uitleg. Geen willekeurige matchpercentages.",
-    status: "Op de productroadmap",
+    text: "Matching op basis van skills en voorkeuren, met een matchpercentage en heldere uitleg. Ervaar het zelf.",
+    status: "Werkt in de demo",
     icon: Sparkle,
   },
   {
     label: "Direct contact",
     title: "Van klik naar gesprek.",
-    text: "Bij wederzijdse interesse willen we direct contact mogelijk maken, met een slimme ijsbreker als begin van het gesprek.",
-    status: "Op de productroadmap",
+    text: "Bij een match opent er een chat met een AI-ijsbreker om het gesprek meteen op gang te brengen.",
+    status: "Werkt in de demo",
     icon: ChatCircleDots,
   },
   {
@@ -69,7 +70,7 @@ const features = [
     icon: DeviceMobile,
   },
 ];
-function FeatureExplorer({ launch }) {
+function FeatureExplorer({ launch, openApp }) {
   const [active, setActive] = useState(0);
   const selected = features[active],
     Icon = selected.icon;
@@ -200,16 +201,15 @@ function FeatureExplorer({ launch }) {
                         : "Van desktop naar mobiel, met één herkenbare Workstr-ervaring."}
                 </p>
                 <span className="roadmap-note">
-                  Conceptvisualisatie, nog geen werkende{" "}
-                  {active === 1
-                    ? "cv-verwerking"
-                    : active === 2
-                      ? "AI-matching"
-                      : active === 3
-                        ? "chat"
-                        : "app"}
-                  .
+                  {active === 5
+                    ? "Conceptvisualisatie, nog geen werkende app."
+                    : ""}
                 </span>
+                {active !== 5 && (
+                  <button className="underlined" onClick={openApp}>
+                    Probeer het in de app <ArrowUpRight size={17} />
+                  </button>
+                )}
               </motion.div>
             )}
           </div>
@@ -455,6 +455,7 @@ export default function App() {
   const [open, setOpen] = useState(false),
     [startId, setStartId] = useState("design"),
     [menu, setMenu] = useState(false),
+    [demo, setDemo] = useState(false),
     [paused, setPaused] = useState(false);
   const [theme, setTheme] = useState(() =>
     window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -533,13 +534,13 @@ export default function App() {
             />
             <h1>Jouw toekomst. In je feed.</h1>
             <p>
-              Ontdek banen zoals je content ontdekt.
+              Upload je cv, ontdek je matches en swipe naar je volgende baan.
               <br />
-              Scroll, voel de klik en vind werk dat bij je past.
+              Scroll zoals je content ontdekt. Match zoals je gewend bent.
             </p>
             <div className="hero-actions">
-              <button className="button" onClick={() => launch()}>
-                Ontdek de demo <ArrowUpRight size={19} />
+              <button className="button" onClick={() => setDemo(true)}>
+                Probeer de app <ArrowUpRight size={19} />
               </button>
               <a className="button outline" href="#hoe-het-werkt">
                 Bekijk het platform <ArrowDown size={17} />
@@ -562,7 +563,7 @@ export default function App() {
           <span>Jouw volgende stap.</span>
           <ArrowUpRight size={18} />
         </div>
-        <FeatureExplorer launch={launch} />
+        <FeatureExplorer launch={launch} openApp={() => setDemo(true)} />
         <WorkVibe launch={launch} />
         <section className="manifesto section-wrap">
           <Reveal>
@@ -740,6 +741,7 @@ export default function App() {
         </div>
       </footer>
       <Feed open={open} onClose={() => setOpen(false)} startId={startId} />
+      <ProductDemo open={demo} onClose={() => setDemo(false)} />
     </MotionConfig>
   );
 }
