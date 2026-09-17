@@ -575,9 +575,7 @@ function LoginScreen({ onLogin }) {
           <p>Swipe. Match. Praat. Zo simpel.</p>
         </div>
       </div>
-      <motion.div className="pd-login-sheet"
-        initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}>
+      <div className="pd-login-sheet">
         <form className="pd-login-form" onSubmit={(e) => { e.preventDefault(); onLogin(); }}>
           <label className="pd-field">
             <Envelope size={18} />
@@ -596,7 +594,7 @@ function LoginScreen({ onLogin }) {
           <p className="pd-login-note">Nog geen account? <b>Gratis aanmelden</b></p>
           <p className="pd-login-demo">Voorbeeld: elke knop gaat direct door.</p>
         </form>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
