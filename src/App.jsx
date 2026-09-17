@@ -501,8 +501,8 @@ export default function App() {
             >
               {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <a className="button small nav-cta" href="#contact">
-              Bouw mee <ArrowUpRight size={15} />
+            <a className="button small nav-cta" href="./app.html">
+              Open de app <ArrowUpRight size={15} />
             </a>
             <button
               className="menu-toggle icon-button"
@@ -539,9 +539,9 @@ export default function App() {
               Scroll zoals je content ontdekt. Match zoals je gewend bent.
             </p>
             <div className="hero-actions">
-              <button className="button" onClick={() => setDemo(true)}>
-                Probeer de app <ArrowUpRight size={19} />
-              </button>
+              <a className="button" href="./app.html">
+                Open de app <ArrowUpRight size={19} />
+              </a>
               <a className="button outline" href="#hoe-het-werkt">
                 Bekijk het platform <ArrowDown size={17} />
               </a>

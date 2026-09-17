@@ -529,19 +529,77 @@ function EmployerOnboarding({ onReady }) {
   );
 }
 
-// --- Root --------------------------------------------------------------------
+// --- Shared phone content ----------------------------------------------------
+
+function PhoneShell({ onClose, standalone }) {
+  const [mode, setMode] = useState(null);
+  const [profile, setProfile] = useState(null);
+  function reset() { setMode(null); setProfile(null); }
+  const inApp = mode && profile;
+
+  return (
+    <div className={`pd-phone ${standalone ? "is-standalone" : ""}`}>
+      <div className="pd-topbar">
+        <span className="pd-brand">workstr</span>
+        <span className={`pd-tag ${isLiveAI ? "pd-live" : ""}`}>{isLiveAI ? "live AI" : "demo"}</span>
+        {standalone ? (
+          <a className="pd-close" href="./index.html" aria-label="Naar de website"><X size={18} /></a>
+        ) : (
+          <button className="pd-close" onClick={onClose} aria-label="Sluiten"><X size={18} /></button>
+        )}
+      </div>
+
+      <div className="pd-viewport">
+        <AnimatePresence mode="wait">
+          {inApp ? (
+            <motion.div key="app" className="pd-slide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <AppShell
+                kind={mode === "candidate" ? "job" : "candidate"}
+                profile={profile}
+                feedItems={mode === "candidate" ? DEMO_JOBS : DEMO_CANDIDATES}
+                onExit={reset}
+              />
+            </motion.div>
+          ) : !mode ? (
+            <motion.div key="choose" className="pd-slide pd-choose" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <h2>Wie ben jij vandaag?</h2>
+              <p>Ervaar beide kanten van Workstr.</p>
+              <button className="pd-choice" onClick={() => setMode("candidate")}>
+                <span className="pd-choice-ic"><User size={24} weight="regular" /></span>
+                <span className="pd-choice-txt"><b>Ik zoek werk</b><small>Upload je cv, ontdek je matches</small></span>
+                <ArrowRight size={18} />
+              </button>
+              <button className="pd-choice" onClick={() => setMode("employer")}>
+                <span className="pd-choice-ic"><Buildings size={24} weight="regular" /></span>
+                <span className="pd-choice-txt"><b>Ik zoek talent</b><small>Plaats een vacature, vind kandidaten</small></span>
+                <ArrowRight size={18} />
+              </button>
+              <span className="pd-fineprint">Interactieve demo met fictieve data.</span>
+            </motion.div>
+          ) : (
+            <motion.div key={mode} className="pd-slide" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
+              <button className="pd-back" onClick={reset}><CaretLeft size={16} /> Terug</button>
+              {mode === "candidate"
+                ? <CandidateOnboarding onReady={setProfile} />
+                : <EmployerOnboarding onReady={setProfile} />}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+// --- Root: dialog embedded in the marketing website --------------------------
 
 export default function ProductDemo({ open, onClose }) {
   const ref = useRef(null);
-  const [mode, setMode] = useState(null);
-  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (open && !el.open) {
       el.showModal();
-      setMode(null); setProfile(null);
       const prev = document.body.style.overflow;
       document.body.style.overflow = "hidden";
       return () => { document.body.style.overflow = prev; };
@@ -549,58 +607,20 @@ export default function ProductDemo({ open, onClose }) {
     if (!open && el.open) el.close();
   }, [open]);
 
-  function reset() { setMode(null); setProfile(null); }
-
-  const inApp = mode && profile;
-
   return (
     <dialog className="pd-dialog" ref={ref} onCancel={onClose}
       onClick={(e) => { if (e.target === ref.current) onClose(); }}>
-      <div className="pd-phone">
-        <div className="pd-topbar">
-          <span className="pd-brand">workstr</span>
-          <span className={`pd-tag ${isLiveAI ? "pd-live" : ""}`}>{isLiveAI ? "live AI" : "demo"}</span>
-          <button className="pd-close" onClick={onClose} aria-label="Sluiten"><X size={18} /></button>
-        </div>
-
-        <div className="pd-viewport">
-          <AnimatePresence mode="wait">
-            {inApp ? (
-              <motion.div key="app" className="pd-slide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <AppShell
-                  kind={mode === "candidate" ? "job" : "candidate"}
-                  profile={profile}
-                  feedItems={mode === "candidate" ? DEMO_JOBS : DEMO_CANDIDATES}
-                  onExit={reset}
-                />
-              </motion.div>
-            ) : !mode ? (
-              <motion.div key="choose" className="pd-slide pd-choose" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <h2>Wie ben jij vandaag?</h2>
-                <p>Ervaar beide kanten van Workstr.</p>
-                <button className="pd-choice" onClick={() => setMode("candidate")}>
-                  <span className="pd-choice-ic"><User size={24} weight="regular" /></span>
-                  <span className="pd-choice-txt"><b>Ik zoek werk</b><small>Upload je cv, ontdek je matches</small></span>
-                  <ArrowRight size={18} />
-                </button>
-                <button className="pd-choice" onClick={() => setMode("employer")}>
-                  <span className="pd-choice-ic"><Buildings size={24} weight="regular" /></span>
-                  <span className="pd-choice-txt"><b>Ik zoek talent</b><small>Plaats een vacature, vind kandidaten</small></span>
-                  <ArrowRight size={18} />
-                </button>
-                <span className="pd-fineprint">Interactieve demo met fictieve data.</span>
-              </motion.div>
-            ) : (
-              <motion.div key={mode} className="pd-slide" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
-                <button className="pd-back" onClick={reset}><CaretLeft size={16} /> Terug</button>
-                {mode === "candidate"
-                  ? <CandidateOnboarding onReady={setProfile} />
-                  : <EmployerOnboarding onReady={setProfile} />}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      {open && <PhoneShell onClose={onClose} />}
     </dialog>
+  );
+}
+
+// --- Root: standalone full-screen app (its own page) -------------------------
+
+export function StandaloneApp() {
+  return (
+    <div className="pd-standalone-root">
+      <PhoneShell standalone />
+    </div>
   );
 }

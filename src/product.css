@@ -263,3 +263,64 @@ label.pd-primary { position: relative; }
 @media (prefers-reduced-motion: reduce) {
   .pd-typing span, .pd-scan { animation: none !important; }
 }
+
+/* --- Standalone app page (its own URL, installable) --- */
+.pd-standalone-root {
+  --u-bg: #ffffff;
+  --u-surface: #ffffff;
+  --u-elevated: #f3f3f3;
+  --u-text: #000000;
+  --u-muted: #6b6b6b;
+  --u-line: #e8e8e8;
+  --u-primary: #000000;
+  --u-primary-text: #ffffff;
+  --u-accent: #06c167;
+  --u-danger: #e02020;
+  --u-ring-track: #e2e2e2;
+  --u-radius: 12px;
+  font-family: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--u-text);
+
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Soft neutral stage so the phone frame reads as an app on desktop. */
+  background: radial-gradient(circle at 50% 0%, #1c1c1c, #000);
+  padding: 0;
+}
+@media (prefers-color-scheme: dark) {
+  .pd-standalone-root {
+    --u-bg: #000000;
+    --u-surface: #0c0c0c;
+    --u-elevated: #191919;
+    --u-text: #ffffff;
+    --u-muted: #a3a3a3;
+    --u-line: #262626;
+    --u-primary: #ffffff;
+    --u-primary-text: #000000;
+    --u-ring-track: #2a2a2a;
+  }
+}
+
+/* Phone frame in standalone: centered card on desktop, full-bleed on phones. */
+.pd-standalone-root .pd-phone.is-standalone {
+  position: relative;
+  inset: auto;
+  margin: 24px auto;
+  width: min(400px, 100vw);
+  height: min(860px, calc(100dvh - 48px));
+}
+@media (max-width: 440px) {
+  .pd-standalone-root { padding: 0; background: var(--u-bg); }
+  .pd-standalone-root .pd-phone.is-standalone {
+    margin: 0; width: 100vw; height: 100dvh; border-radius: 0; border: none; box-shadow: none;
+  }
+}
+/* When launched as an installed PWA, always fill the screen. */
+@media (display-mode: standalone) {
+  .pd-standalone-root { padding: 0; background: var(--u-bg); }
+  .pd-standalone-root .pd-phone.is-standalone {
+    margin: 0; width: 100vw; height: 100dvh; border-radius: 0; border: none; box-shadow: none;
+  }
+}
