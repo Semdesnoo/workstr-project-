@@ -32,7 +32,7 @@ function useTheme() {
 function Nav() {
   const [theme, toggle] = useTheme();
   const [open, setOpen] = useState(false);
-  const links = [["#product", "Product"], ["#professionals", "Voor professionals"], ["#bedrijven", "Voor bedrijven"], ["#msp", "MSP"], ["#prijzen", "Prijzen"]];
+  const links = [["#product", "Product"], ["#professionals", "Voor professionals"], ["#bedrijven", "Voor bedrijven"], ["#msp", "MSP"], ["#platform", "Platform"], ["#prijzen", "Prijzen"]];
   return (
     <header className="s-nav">
       <a href="#top" aria-label="Workstr home"><Logo /></a>
@@ -264,17 +264,40 @@ function Chart() {
   );
 }
 
+// Architecture: three products on one shared engine. Hovering a product lights up what it uses.
+const ENGINE = [
+  ["Matching", "match", ["Skills", "Projects", "Preferences", "Location"]],
+  ["AI Agents", "agents", ["Support", "Compliance", "Recruitment", "Supplier", "Finance"]],
+  ["Data layer", "data", ["Profiles", "Vacancies", "Contracts", "Documents", "Messages"]],
+];
+const USES = {
+  App: ["Skills", "Projects", "Preferences", "Location", "Support", "Profiles", "Vacancies", "Documents", "Messages"],
+  Business: ["Skills", "Projects", "Preferences", "Location", "Support", "Recruitment", "Profiles", "Vacancies", "Messages"],
+  MSP: ENGINE.flatMap(([, , items]) => items),
+};
 function Products() {
-  const p = [["App", "Voor professionals", "Work Profile, Discover, matches, chat, automatisch CV.", "#/app"],
-    ["Business", "Voor werkgevers", "Vacatures, talent search, berichten en analytics.", "#/business"],
-    ["MSP", "Voor enterprise", "Requests, leveranciers, compliance, contracten, uren en agents.", "#/msp"]];
+  const [hl, setHl] = useState(null);
+  const p = [["App", "Candidates · Freelancers", "Work Profile, Discover, matches, chat, automatisch CV.", "#/app"],
+    ["Business", "Employers · Recruiters", "Vacatures, talent search, berichten en analytics.", "#/business"],
+    ["MSP", "Enterprise · MSP teams", "Requests, leveranciers, compliance, contracten, uren en agents.", "#/msp"]];
+  const on = (item) => !hl || USES[hl].includes(item);
   return (
-    <section className="s-sec">
-      <h2 className="s-h2">Begin met één.<br /><span className="s-dim">Groei naar alles.</span></h2>
-      <p className="s-sub">Hetzelfde ecosysteem, drie interfaces. Simpel voor de kandidaat, krachtig voor de enterprise.</p>
-      <div className="s-grid3">{p.map(([n, who, txt, h]) => (
-        <a key={n} href={APP + h} className="card s-prod"><span className="xs muted">{who}</span><Logo size={24} sub={n} /><p className="muted sm">{txt}</p><span className="s-link">Open {n} <ArrowRight size={14} /></span></a>
-      ))}</div>
+    <section className="s-sec" id="platform">
+      <h2 className="s-h2">Drie producten.<br /><span className="s-dim">Eén engine.</span></h2>
+      <p className="s-sub">Simpel voor de kandidaat, krachtig voor de enterprise. Elk product draait op dezelfde matching, agents en data.</p>
+      <div className="s-arch">
+        <div className="s-grid3">{p.map(([n, who, txt, h]) => (
+          <a key={n} href={APP + h} className={`card s-prod ${hl === n ? "hl" : ""}`} onMouseEnter={() => setHl(n)} onMouseLeave={() => setHl(null)} onFocus={() => setHl(n)} onBlur={() => setHl(null)}>
+            <span className="xs muted">{who}</span><Logo size={24} sub={n} /><p className="muted sm">{txt}</p><span className="s-link">Open {n} <ArrowRight size={14} /></span></a>
+        ))}</div>
+        <div className="s-wires" aria-hidden><i /><i /><i /></div>
+        <div className="s-engine"><Logo size={18} sub="Engine" /></div>
+        <div className="s-wires" aria-hidden><i /><i /><i /></div>
+        <div className="s-grid3">{ENGINE.map(([name, id, items]) => (
+          <div key={id} className="card stack s-layer"><b>{name}</b>
+            <ul>{items.map((x) => <li key={x} className={on(x) ? "" : "off"}>{x}</li>)}</ul></div>
+        ))}</div>
+      </div>
     </section>
   );
 }

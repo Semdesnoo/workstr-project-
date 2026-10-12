@@ -14,7 +14,11 @@ for (const theme of ["dark", "light"]) {
     await expect(page.getByText("Offshore Jacket Inspection")).toBeVisible();
     await page.getByRole("tab", { name: "Compliance" }).click();
     await expect(page.getByText(/VCA verlopen/)).toBeVisible();
-    await page.getByText("Verzint de AI ervaring in mijn profiel?").click();
+    await page.getByRole("link", { name: /Open MSP/ }).hover();
+  await expect(page.locator(".s-layer li.off")).toHaveCount(0);
+  await page.getByRole("link", { name: /Open App/ }).hover();
+  await expect(page.locator(".s-layer li.off")).toHaveCount(5);
+  await page.getByText("Verzint de AI ervaring in mijn profiel?").click();
     await expect(page.getByText(/AI structureert alleen wat jij schrijft/)).toBeVisible();
     const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).exclude("iframe").analyze();
     expect(axe.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(" | ")}`)).toEqual([]);

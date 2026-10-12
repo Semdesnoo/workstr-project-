@@ -151,3 +151,18 @@ html[data-theme="light"] .s-code { color: var(--primary-h); }
   .s-marquee > div, .s-caret, .s-spin { animation: none; }
   .s-line .stroke { stroke-dashoffset: 0; }
 }
+
+/* Architecture: products → engine → layers */
+.s-arch { display: grid; }
+.s-prod.hl { border-color: var(--primary); }
+.s-wires { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; height: 36px; }
+.s-wires i { justify-self: center; width: 1px; background: linear-gradient(var(--border), var(--primary), var(--border)); }
+.s-engine {
+  justify-self: center; padding: 14px 28px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--primary) 60%, var(--border));
+  background: var(--surface); box-shadow: 0 0 60px rgba(112, 108, 255, .25);
+}
+.s-layer { align-content: start; }
+.s-layer ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
+.s-layer li { font-size: 13px; padding: 4px 10px; border-radius: 99px; background: var(--elev); border: 1px solid var(--border); transition: opacity .2s; }
+.s-layer li.off { opacity: .3; }
+@media (max-width: 900px) { .s-wires { grid-template-columns: 1fr; } .s-wires i:nth-child(n + 2) { display: none; } }

@@ -12,6 +12,17 @@ Website + klikbare platform-MVP volgens de Workstr Master Project Brief.
 
 Regels (matching, certificaatstatus, compliance, timesheetcontroles, bedragen) zijn gewone code in `src/platform/logic.js`. De "AI"-structurering is een lokale extractor die alleen labelt wat de gebruiker schreef. Alles is demo-data in localStorage (reset: Profile → Demo resetten).
 
+## Architectuur
+
+```
+WORKSTR ── App (candidates) · Business (employers) · MSP (enterprise)   src/platform/Candidate.jsx, Desk.jsx
+   │
+WORKSTR ENGINE
+   ├── Matching   skills, projects, preferences, location     src/platform/logic.js  (matchJob, km)
+   ├── AI Agents  support, compliance, recruitment, supplier, finance   Desk.jsx Agent Center + logic.js rules
+   └── Data layer profiles, vacancies, contracts, documents, messages   src/platform/data.js + localStorage store
+```
+
 ## Starten
 
 Node.js 22.12+.
