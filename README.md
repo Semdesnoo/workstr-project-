@@ -1,16 +1,16 @@
 # Workstr
 
-Nederlandse conceptwebsite en interactieve vacaturedemo, gebaseerd op de aangeleverde Workstr-presentatie. De layout gebruikt 187n.ai als referentie: gecentreerde merkopening, interactieve functietabs, contrasterende kleurvlakken, draaibare showcase, uitklapbare partnerinformatie, een conversationeel contactformulier en grote footer. Geen broncode, bedrijfsclaims, klantlogo's of media van de referentiesite zijn overgenomen.
+> Less searching. More working.
 
-## Workstr platform (`app.html`)
+Website + klikbare platform-MVP volgens de Workstr Master Project Brief.
 
-Klikbare MVP volgens de Master Project Brief: één ecosysteem, drie interfaces.
+- **Website** (`index.html` → `src/site/`): opbouw geïnspireerd op bird.com (rustige layout, grote tweekleurige koppen, live productmockups) en jaicob.ai (zoek-hero, feature-tabs, oud-vs-nieuw, AI-agents). Eigen merk, eigen teksten, geen overgenomen code, logo's of claims. Donker standaard, licht/donker-schakelaar.
+- **Platform** (`app.html` → `src/platform/`), één ecosysteem, drie interfaces:
+  - `#/app`: Candidate App (mobile-first): Discover, Matches, Create, Inbox, Work Profile, Generate CV.
+  - `#/business`: Workstr Business: Overview, Vacancies, Talent, Messages, Company, Analytics, Settings.
+  - `#/msp`: Workstr MSP: Requests, Workers, Suppliers (+ portal), Compliance, Contracts, Timesheets, Agent Center (no-code agent templates, actielog, menselijke goedkeuring).
 
-- `#/app` — Candidate App (mobile-first): Discover, Matches (Weekly Opportunities), Create (project → AI-structurering → review), Inbox met AI-suggesties, Work Profile met certificaatstatussen, beschikbaarheid en **Generate CV** (PDF via print).
-- `#/business` — Workstr Business: Overview, Vacancies (tekst plakken → gestructureerd → live in Discover), Talent Search, Messages, Company, Analytics, Settings.
-- `#/msp` — Workstr MSP: Requests, Workers, Suppliers (+ supplier portal), Compliance, Contracts, Timesheets, Agent Center met actielog en menselijke goedkeuring.
-
-Regels (matching, certificaatstatus, compliance, timesheetcontroles, bedragen) zijn gewone code in `src/platform/logic.js` — getest met `node --test src/platform/logic.test.js`. De "AI"-structurering is een lokale extractor die alleen labelt wat de gebruiker schreef. Demo-data, opgeslagen in localStorage (reset via Profile → Demo resetten). Foto's: Unsplash.
+Regels (matching, certificaatstatus, compliance, timesheetcontroles, bedragen) zijn gewone code in `src/platform/logic.js`. De "AI"-structurering is een lokale extractor die alleen labelt wat de gebruiker schreef. Alles is demo-data in localStorage (reset: Profile → Demo resetten).
 
 ## Starten
 
@@ -20,57 +20,18 @@ Node.js 22.12+.
 npm ci
 npm run dev
 npm run build
-npm run preview
-npm test
+node --test src/platform/logic.test.js   # unit
+npm test                                  # Playwright e2e + axe (WCAG AA), Edge
 ```
 
-Tests gebruiken Microsoft Edge via Playwright (`channel: msedge`). Op een andere machine: installeer Edge of wijzig channel in playwright.config.js en installeer de gekozen Playwright-browser.
+## Live
 
-## Werkend
+https://semdesnoo.github.io/workstr-project-/ (site) · `/app.html` (platform). Deploy: `dist/` naar branch `gh-pages`.
 
-- React/Vite-website met Nederlands als voertaal.
-- Responsief, systeemthema en handmatige licht/donker-schakelaar.
-- Functietabs met toetsenbordbediening.
-- Animatie met pauzeknop en reduced-motion ondersteuning.
-- Showcase met sleepbediening en vorige/volgende-knoppen.
-- Verticale scroll-snap vacaturefeed met drie fictieve vacatures.
-- Vacatures lokaal bewaren en verwijderen; fallback bij ontoegankelijke opslag.
-- FAQ en uitklapbare partnerinformatie.
-- Contactformulier valideert invoer en maakt een mailto-concept. Niets wordt automatisch verzonden of naar een backend gestuurd.
+## Nog niet gebouwd
 
-## Bewust nog niet gebouwd
-
-Geen echte vacaturedatabase, video-hosting, accountregistratie, cv-upload, AI-matching, chat, betalingen, notificaties, native app of App Store-publicatie. Het is een foto-demo, geen product met live recruitmentfunctionaliteit. Alle functies in ontwikkeling zijn als zodanig benoemd.
-
-## Productrichting uit de presentatie
-
-CV naar visueel profiel, transparante AI-matchsuggesties, wederzijdse interesse, chat met AI-ijsbreker, abonnementsmodel per actieve vacature en enterprise-maatwerk. AI-uitkomsten en besparingen worden niet als bewezen resultaten gepresenteerd.
-
-## Bestanden
-
-- src/App.jsx: referentie-geïnspireerde pagina en interacties.
-- src/components.jsx: herbruikbare merk-, animatie- en feedcomponenten, demodata.
-- src/styles.css: basistokens en feedstyling.
-- src/reference.css: nieuwe layout en kleurvlakken.
-- public/: lokale merk- en fotoassets.
-- tests/: browserregressies, responsive controles en axe WCAG-scans.
-- artifacts/: lokale testbewijzen (niet voor publicatie).
-
-## Privacy en publicatie
-
-Alleen `workstr-saved` wordt lokaal opgeslagen nadat de gebruiker een vacature bewaart. Geen externe analytics of trackingcookies. Formuliergegevens worden niet door de website verzonden; de gebruiker opent en verstuurt zelf een e-mail. Mailadres info@workstr.com komt uit de presentatie; werking van deze mailbox is niet geverifieerd.
-
-Voor een echte lancering: juridische bedrijfsgegevens en privacyvoorwaarden vaststellen, authenticatie en autorisatie bouwen, veilige cv-opslag, bewaartermijnen, verwijderen/exporteren van gegevens, employer verificatie, moderatie en anti-discriminatiecontroles voor matching regelen.
-
-De build staat in dist/. base './' ondersteunt statische hosting in een subdirectory. Repository: https://github.com/workstrai/workstr-project-. Er is nog geen publieke website-deployment ingesteld.
-
-Aanvullende demo-interacties: werkvibe-keuzehulp, willekeurige suggestie via 'Verras me', zoeken op functie/plaats/skills, sectorfilter en animatie bij bewaren. De keuzehulp gebruikt vaste voorbeeldcategorieën, geen AI. De bijbehorende bestanden zijn src/WorkVibe.jsx en src/playful.css.
+Echte backend/auth, echte AI-koppeling (server-side key), video, Word/PDF-parsing, facturatie-engine, betalingen. Klantlogo's en testimonials pas na toestemming van echte pilotklanten.
 
 ## Media
 
-Logo: uitgesneden uit de aangeleverde PDF. Foto's: lokale WebP-versies van Unsplash-beelden (geen echte Workstr-klanten):
-- https://images.unsplash.com/photo-1522071820081-009f0129c71c
-- https://images.unsplash.com/photo-1442512595331-e89e73853f31
-- https://images.unsplash.com/photo-1498050108023-c5249f4df085
-
-Vervang voor de productlancering door eigen team- en vacaturevideo's. Font: lokaal gebundelde Outfit via @fontsource. Iconen: Phosphor.
+Werkfoto's in `public/work/` via Unsplash. Font: Geist. Iconen: Phosphor.

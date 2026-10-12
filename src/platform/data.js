@@ -203,12 +203,21 @@ export const contracts = [
 ];
 
 export const agents = [
-  { id: "support", name: "Support Agent", stat: "642 vragen opgelost", sub: "12 doorgezet naar mens" },
-  { id: "compliance", name: "Compliance Agent", stat: "86 documenten verwerkt", sub: "7 menselijke controles nodig" },
-  { id: "supplier", name: "Supplier Agent", stat: "14 leveranciers benaderd", sub: "5 wachten op reactie" },
-  { id: "recruitment", name: "Recruitment Agent", stat: "31 kandidaten gevonden", sub: "9 op shortlist" },
-  { id: "contract", name: "Contract Agent", stat: "6 concepten voorbereid", sub: "2 wachten op goedkeuring" },
-  { id: "finance", name: "Finance Agent", stat: "8 afwijkende timesheets", sub: "3 opgelost na navraag" },
+  { id: "support", name: "Support Agent", stat: "642 vragen opgelost", sub: "12 doorgezet naar mens", saved: 54 },
+  { id: "compliance", name: "Compliance Agent", stat: "86 documenten verwerkt", sub: "7 menselijke controles nodig", saved: 21 },
+  { id: "supplier", name: "Supplier Agent", stat: "14 leveranciers benaderd", sub: "5 wachten op reactie", saved: 9 },
+  { id: "recruitment", name: "Recruitment Agent", stat: "31 kandidaten gevonden", sub: "9 op shortlist", saved: 16 },
+  { id: "contract", name: "Contract Agent", stat: "6 concepten voorbereid", sub: "2 wachten op goedkeuring", saved: 6 },
+  { id: "finance", name: "Finance Agent", stat: "8 afwijkende timesheets", sub: "3 opgelost na navraag", saved: 11 },
+];
+
+// No-code agent templates (Business/MSP builder). Sending always asks a human unless switched off.
+export const agentTemplates = [
+  { id: "cert-reminder", name: "Certificaat-herinnering", agent: "Compliance Agent", trigger: "30 dagen voor verloop", channel: "WhatsApp" },
+  { id: "supplier-chase", name: "Leverancier opvolgen", agent: "Supplier Agent", trigger: "48 uur geen kandidaat", channel: "E-mail" },
+  { id: "intake", name: "Intake-screening", agent: "Recruitment Agent", trigger: "Nieuwe interesse op vacature", channel: "In-app chat" },
+  { id: "timesheet", name: "Timesheet-reminder", agent: "Finance Agent", trigger: "Vrijdag 16:00 niet ingediend", channel: "In-app chat" },
+  { id: "outreach", name: "Talent outreach", agent: "Recruitment Agent", trigger: "Match ≥ 85% en beschikbaar", channel: "In-app chat" },
 ];
 
 export const seedAgentLog = [

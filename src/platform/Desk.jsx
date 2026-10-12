@@ -4,7 +4,7 @@ import {
   FileText, Timer, Robot, Sparkle, Check, X, Plus, Lightning,
 } from "@phosphor-icons/react";
 import {
-  companies, seedJobs, talent, bizCandidates, plans, workers, suppliers, contracts, agents, REQUIRED_DOCS, CITIES,
+  companies, seedJobs, talent, bizCandidates, plans, workers, suppliers, contracts, agents, agentTemplates, REQUIRED_DOCS, CITIES,
 } from "./data.js";
 import { matchJob, structureVacancy, compliance, timesheetIssues, km, eur, daysLeft, AVAIL_LABEL, CERT_WORDS } from "./logic.js";
 import { Logo, StatusBadge, Reasons, initials } from "./ui.jsx";
@@ -401,11 +401,41 @@ function Timesheets({ msp, setMsp, log }) {
   </>);
 }
 
+function AgentBuilder({ setMsp, log, onDone }) {
+  const [f, setF] = useState({ ...agentTemplates[0], tone: "Vriendelijk", approval: true });
+  const pick = (tpl) => setF({ ...f, ...tpl });
+  const create = () => {
+    setMsp((m) => ({ ...m, custom: [{ ...f, id: uid(), runs: 0 }, ...(m.custom || [])] }));
+    log(f.agent, "Mens", `Nieuwe agent live: ${f.name} — trigger “${f.trigger}” via ${f.channel}${f.approval ? ", verzenden na goedkeuring" : ""}.`);
+    onDone();
+  };
+  return (
+    <section className="card stack" style={{ marginBottom: 16 }}>
+      <h3 className="sec-title">Nieuwe agent — kies een template</h3>
+      <div className="row wrap">{agentTemplates.map((x) => <button key={x.id} className={`chip ${f.id === x.id ? "on" : ""}`} aria-pressed={f.id === x.id} onClick={() => pick(x)}>{x.name}</button>)}</div>
+      <div className="cols even">
+        <label className="f">Naam<input className="in" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
+        <label className="f">Trigger<input className="in" value={f.trigger} onChange={(e) => setF({ ...f, trigger: e.target.value })} /></label>
+        <label className="f">Kanaal<select className="in" value={f.channel} onChange={(e) => setF({ ...f, channel: e.target.value })}>{["In-app chat", "E-mail", "WhatsApp", "SMS"].map((c) => <option key={c}>{c}</option>)}</select></label>
+        <label className="f">Tone of voice<select className="in" value={f.tone} onChange={(e) => setF({ ...f, tone: e.target.value })}>{["Vriendelijk", "Formeel", "Direct"].map((c) => <option key={c}>{c}</option>)}</select></label>
+      </div>
+      <label className="row sm"><input type="checkbox" checked={f.approval} onChange={(e) => setF({ ...f, approval: e.target.checked })} />Menselijke goedkeuring vóór verzenden</label>
+      <div className="row"><span className="grow" /><button className="btn" onClick={onDone}>Annuleer</button><button className="btn primary" disabled={!f.name || !f.trigger} onClick={create}><Lightning size={16} />Zet live</button></div>
+    </section>
+  );
+}
+
 function AgentCenter({ msp, setMsp, log }) {
+  const [build, setBuild] = useState(false);
   const decide = (a, ok) => { setMsp((m) => ({ ...m, approvals: m.approvals.filter((x) => x.id !== a.id) })); log(a.agent, "Mens", `${ok ? "Goedgekeurd" : "Afgewezen"}: ${a.text}`); };
+  const saved = agents.reduce((n, a) => n + a.saved, 0);
   return (<>
-    <Head title="Agent Center" sub="AI doet voorbereiding en standaardwerk. Elke actie wordt gelogd; mens behandelt uitzonderingen." />
-    <div className="kpis">{agents.map((a) => <div className="kpi" key={a.id}><span className="row sm muted"><Robot size={16} />{a.name}</span><b style={{ fontSize: 18, marginTop: 8 }}>{a.stat}</b><span className="xs muted">{a.sub}</span></div>)}</div>
+    <Head title="Agent Center" sub={`AI doet voorbereiding en standaardwerk. Deze maand ${saved} uur bespaard. Elke actie gelogd; mens behandelt uitzonderingen.`}>
+      {!build && <button className="btn primary" onClick={() => setBuild(true)}><Plus size={16} />Nieuwe agent</button>}
+    </Head>
+    {build && <AgentBuilder setMsp={setMsp} log={log} onDone={() => setBuild(false)} />}
+    <div className="kpis">{agents.map((a) => <div className="kpi" key={a.id}><span className="row sm muted"><Robot size={16} />{a.name}</span><b style={{ fontSize: 18, marginTop: 8 }}>{a.stat}</b><span className="xs muted">{a.sub} · {a.saved} u bespaard</span></div>)}
+      {(msp.custom || []).map((a) => <div className="kpi" key={a.id} style={{ borderColor: "var(--primary)" }}><span className="row sm muted"><Sparkle size={16} />{a.name}</span><b style={{ fontSize: 18, marginTop: 8 }}>Live · {a.channel}</b><span className="xs muted">{a.trigger} · {a.tone}{a.approval ? " · met goedkeuring" : ""}</span></div>)}</div>
     <div className="cols">
       <section className="card"><h3 className="sec-title">Actielog</h3><Log rows={msp.log} /></section>
       <section className="card stack"><h3 className="sec-title">Wacht op menselijke goedkeuring</h3>

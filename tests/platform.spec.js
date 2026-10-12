@@ -39,6 +39,10 @@ test("candidate app: onboarding → match uitleg → interesse → business inbo
   await page.getByRole("button", { name: /AI Agents/ }).click();
   await page.getByRole("button", { name: "Goedkeuren" }).first().click();
   await expect(page.getByText(/Goedgekeurd: Verlenging/)).toBeVisible();
+  await page.getByRole("button", { name: "Nieuwe agent" }).click();
+  await page.getByRole("button", { name: "Talent outreach" }).click();
+  await page.getByRole("button", { name: "Zet live" }).click();
+  await expect(page.getByText(/Nieuwe agent live: Talent outreach/)).toBeVisible();
   await page.screenshot({ path: "test-results/platform-msp.png", fullPage: true });
   expect(errors).toEqual([]);
 });
