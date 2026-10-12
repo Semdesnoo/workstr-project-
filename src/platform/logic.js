@@ -121,6 +121,9 @@ export function structureProject(text) {
 
 export function structureVacancy(text) {
   const lines = text.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  // Certs only from requirement lines when present (task lines mention techniques too).
+  const req = lines.filter((l) => /^(eisen|vereist|requirements|must)/i.test(l));
+  const reqText = req.length ? req.join(" ") : text;
   const rate = text.match(/€\s?(\d[\d.]*)\s?[-–]\s?€?\s?(\d[\d.]*)/);
   const num = (s) => Number(String(s).replace(/\./g, ""));
   const rateMin = rate ? num(rate[1]) : 0, rateMax = rate ? num(rate[2]) : 0;
@@ -131,7 +134,7 @@ export function structureVacancy(text) {
     city: Object.keys(CITIES).find((c) => lower.includes(c.toLowerCase())) || "",
     rateMin, rateMax, unit: rateMax > 500 ? "maand" : "uur", contract,
     skills: found(SKILL_WORDS, text),
-    certs: CERT_WORDS.filter((c) => new RegExp(`\\b${c.replace(/[.+]/g, "\\$&")}\\b`, "i").test(text)),
+    certs: CERT_WORDS.filter((c) => new RegExp(`\\b${c.replace(/[.+]/g, "\\$&")}\\b`, "i").test(reqText)),
     tasks: lines.filter((l) => /^[-•*]/.test(l)).map((l) => l.replace(/^[-•*]\s*/, "")).slice(0, 6),
     sector: found(SECTOR_WORDS, text)[0] || "Industrial",
   };
@@ -160,5 +163,8 @@ export function timesheetIssues(ts, contractRate) {
   if (ts.rate !== contractRate) issues.push(`Tarief €${ts.rate} ≠ contract €${contractRate}`);
   return { hours, amount: hours * contractRate, issues };
 }
+
+// CRM/sourcing records → matching profile (recruiter view: no personal min-rate filter).
+export const toProfile = (c) => ({ ...c, radiusKm: 150, minRate: 0, contracts: ["freelance", "project", "vast"], projects: c.projects || [] });
 
 export const eur = (n) => "€" + n.toLocaleString("nl-NL");

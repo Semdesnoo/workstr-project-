@@ -506,7 +506,7 @@ function Profile({ p, setCreate, setCv, setPrefs, update }) {
       <section><div className="row between"><h3 className="sec-title">Opleiding</h3><button className="btn sm ghost" onClick={() => setCreate("education")}><Plus size={14} />Opleiding</button></div>
         {p.education.map((o) => <p key={o.id}><b>{o.name}</b> <span className="muted sm">· {o.school} · {o.year}</span></p>)}</section>
 
-      <button className="btn ghost sm" style={{ justifySelf: "center" }} onClick={() => { localStorage.removeItem("workstr.v2"); location.reload(); }}>Demo resetten</button>
+      <button className="btn ghost sm" style={{ justifySelf: "center" }} onClick={() => { localStorage.removeItem("workstr.v3"); location.reload(); }}>Demo resetten</button>
     </div>
   );
 }

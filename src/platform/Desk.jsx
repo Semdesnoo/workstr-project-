@@ -4,10 +4,12 @@ import {
   FileText, Timer, Robot, Sparkle, Check, X, Plus, Lightning,
 } from "@phosphor-icons/react";
 import {
-  companies, seedJobs, talent, bizCandidates, plans, workers, suppliers, contracts, agents, agentTemplates, REQUIRED_DOCS, CITIES,
+  companies, seedJobs, plans, workers, suppliers, contracts, agents, agentTemplates, REQUIRED_DOCS, CITIES,
 } from "./data.js";
 import { matchJob, structureVacancy, compliance, timesheetIssues, km, eur, daysLeft, AVAIL_LABEL, CERT_WORDS } from "./logic.js";
 import { Logo, StatusBadge, Reasons, initials } from "./ui.jsx";
+import AgentsHub from "./AgentsHub.jsx";
+import { useAts, useWorker, ATS_NAV, Candidates, Pipeline, Inbox, Agenda, Workflows, Sourcing, Integrations, Background } from "./Ats.jsx";
 
 const ME_CO = "vanoord"; // logged-in demo employer
 const t = () => new Date().toTimeString().slice(0, 5);
@@ -35,17 +37,28 @@ const Kpi = ({ label, value, hint }) => <div className="kpi"><span className="sm
 
 // ============================ Workstr Business ============================
 export function Business({ store, update }) {
-  const [page, setPage] = useState("overview");
-  const myJobs = [...store.jobs, ...seedJobs].filter((j) => j.company === ME_CO);
-  const convs = store.convs.filter((c) => c.company === ME_CO);
-  const nav = [["overview", "Overview", SquaresFour], ["vacancies", "Vacancies", Briefcase, myJobs.length], ["talent", "Talent", MagnifyingGlass],
-    ["messages", "Messages", ChatCircle, convs.length], ["company", "Company", Buildings], ["analytics", "Analytics", ChartBar], ["settings", "Settings", Gear]];
+  const [[page, focus], setNav] = useState(["overview", null]);
+  const go = (p, f = null) => setNav([p, f]);
+  const jobs = [...store.jobs, ...seedJobs];
+  const myJobs = jobs.filter((j) => j.company === ME_CO);
+  const ctx = useAts(store, update, jobs);
+  useWorker(ctx);
+  const pending = store.ats.queue.filter((j) => j.status === "approval").length;
+  const nav = [["overview", "Overzicht", SquaresFour], ["agents", "AI Agents", Robot, (store.ats.approvals || []).length + pending], ATS_NAV[0], ATS_NAV[1], ["vacancies", "Vacatures", Briefcase, myJobs.length], ...ATS_NAV.slice(2, 7),
+    ATS_NAV[7], ["analytics", "Analytics", ChartBar], ["company", "Bedrijfsprofiel", Buildings], ["settings", "Abonnement", Gear]];
   return (
-    <Shell sub="Business" nav={nav} page={page} setPage={setPage}>
-      {page === "overview" && <BizOverview myJobs={myJobs} store={store} />}
+    <Shell sub="Business" nav={nav} page={page} setPage={go}>
+      {page === "overview" && <BizOverview ctx={ctx} myJobs={myJobs} go={go} />}
+      {page === "agents" && <AgentsHub store={store} update={update} jobs={jobs} company={ME_CO} />}
+      {page === "kandidaten" && <Candidates ctx={ctx} jobs={jobs} go={go} />}
+      {page === "pipeline" && <Pipeline ctx={ctx} jobs={jobs} />}
       {page === "vacancies" && <Vacancies myJobs={myJobs} update={update} />}
-      {page === "talent" && <TalentSearch />}
-      {page === "messages" && <BizMessages convs={convs} update={update} />}
+      {page === "berichten" && <Inbox key={focus} ctx={ctx} focus={focus} />}
+      {page === "agenda" && <Agenda key={focus} ctx={ctx} jobs={jobs} focus={focus} />}
+      {page === "workflows" && <Workflows ctx={ctx} />}
+      {page === "sourcing" && <Sourcing ctx={ctx} jobs={jobs} />}
+      {page === "integraties" && <Integrations ctx={ctx} />}
+      {page === "achtergrond" && <Background ctx={ctx} />}
       {page === "company" && <CompanyEdit />}
       {page === "analytics" && <Analytics />}
       {page === "settings" && <Settings />}
@@ -53,22 +66,28 @@ export function Business({ store, update }) {
   );
 }
 
-function BizOverview({ myJobs, store }) {
-  const fresh = bizCandidates.filter((c) => c.stage === "Nieuw").length + store.interested.length;
+function BizOverview({ ctx, myJobs, go }) {
+  const { ats, cand, job } = ctx;
+  const week = ats.events.filter((e) => Math.abs(daysLeft(e.date)) <= 7).length;
+  const sent = ats.queue.filter((j) => j.status === "sent").length + ats.messages.filter((m) => m.dir === "out" && m.status === "sent").length;
+  const tasks = ats.tasks.filter((t) => !t.done);
+  const issues = ats.queue.filter((j) => ["failed", "dead", "approval", "retry"].includes(j.status));
   return (<>
-    <Head title="Goedemorgen, Van Oord" sub="Wat er vandaag gebeurt in je recruitment." />
+    <Head title="Goedemorgen, Van Oord" sub="Je AI Recruitment OS — wat er vandaag gebeurt." />
     <div className="kpis">
-      <Kpi label="Open vacancies" value={myJobs.length + 6} /><Kpi label="New candidates" value={19 + fresh} />
-      <Kpi label="Interviews" value={6} /><Kpi label="Matches today" value={14} />
+      <Kpi label="Kandidaten in CRM" value={ats.candidates.length} /><Kpi label="Actieve sollicitaties" value={ats.apps.filter((a) => !["Geplaatst", "Afgewezen"].includes(a.stage)).length} />
+      <Kpi label="Gesprekken (±7 d)" value={week} /><Kpi label="Berichten verzonden" value={sent} /><Kpi label="Workflows actief" value={ats.workflows.filter((w) => w.on).length} hint={`${myJobs.length} eigen vacatures`} />
     </div>
     <div className="cols">
-      <section className="card"><h3 className="sec-title">Pipeline</h3>
+      <section className="card"><div className="row between"><h3 className="sec-title">Pipeline</h3><button className="btn sm ghost" onClick={() => go("pipeline")}>Open pipeline</button></div>
         <table className="t"><thead><tr><th>Kandidaat</th><th>Vacature</th><th>Match</th><th>Fase</th></tr></thead>
-          <tbody>{bizCandidates.map((c) => <tr key={c.name}><td><b>{c.name}</b></td><td className="muted">{c.job}</td><td><span className="match">{c.score}%</span></td><td><span className="tag">{c.stage}</span></td></tr>)}</tbody></table>
+          <tbody>{ats.apps.slice(0, 8).map((a) => { const c = cand(a.cand), j = job(a.job); return c && j && <tr key={a.id}><td><b>{c.name}</b></td><td className="muted">{j.title}</td><td><span className="match">{ctx.score(c, j)}%</span></td><td><span className="tag">{a.stage}</span></td></tr>; })}</tbody></table>
       </section>
-      <section className="card stack"><h3 className="sec-title">Workstr signaleert</h3>
-        <Reasons reasons={[{ type: "ok", text: "3 kandidaten met geverifieerd UT2 beschikbaar binnen 30 km" },
-          { type: "warn", text: "Vacature ‘QA/QC Inspector’ — tarief ligt 8% onder markt" }, { type: "warn", text: "2 kandidaten wachten > 48 uur op reactie" }]} />
+      <section className="card stack"><h3 className="sec-title">Vandaag voor jou</h3>
+        {tasks.map((t) => <div key={t.id} className="li sm"><Check size={16} className="muted" />{t.text}</div>)}
+        {issues.map((j) => <button key={j.id} className="li sm" onClick={() => go("achtergrond")}><span className="issue">{j.status === "approval" ? "Goedkeuring nodig" : j.error || "Retry"}</span><span className="grow muted">{cand(j.to)?.name} · {j.workflow || "handmatig"}</span></button>)}
+        {!tasks.length && !issues.length && <p className="muted sm">Niets openstaand. Je agents hebben het onder controle.</p>}
+        <button className="btn" onClick={() => go("sourcing")}>Nieuwe kandidaten sourcen</button>
       </section>
     </div>
   </>);
@@ -121,65 +140,6 @@ function Vacancies({ myJobs, update }) {
   </>);
 }
 
-function TalentSearch() {
-  const [q, setQ] = useState("UT Inspector");
-  const [f, setF] = useState({ city: "Rotterdam", now: false, ut2: true, offshore: true, maxRate: 65 });
-  const tog = (k) => setF({ ...f, [k]: !f[k] });
-  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
-  const far = new Date(Date.now() + 999 * 864e5).toISOString();
-  const job = { certs: f.ut2 ? ["UT2"] : [], skills: [...new Set(talent.flatMap((x) => x.skills).filter((s) => words.some((w) => s.toLowerCase().includes(w))))],
-    city: f.city, unit: "uur", rateMax: f.maxRate, contract: "freelance", start: new Date(Date.now() + 30 * 864e5).toISOString(), sector: "Offshore" };
-  const rows = talent
-    .filter((x) => (!f.city || (km(x.city, f.city) ?? 0) <= 100) && (!f.now || x.availability === "now") && x.rate <= f.maxRate
-      && (!f.ut2 || x.certs.some((c) => c.name === "UT2" && c.verified)) && (!f.offshore || x.skills.includes("Offshore")))
-    .map((x) => ({ x, m: matchJob({ ...x, certs: x.certs.map((c) => ({ ...c, validUntil: far })), radiusKm: 100, minRate: x.rate, contracts: ["freelance"], projects: [] }, job) }))
-    .sort((a, b) => b.m.score - a.m.score);
-  return (<>
-    <Head title="Talent" sub="Zoek op skills, projecten en certificaten — niet alleen functietitel." />
-    <section className="card stack" style={{ marginBottom: 16 }}>
-      <div className="row"><MagnifyingGlass size={20} /><input className="in" aria-label="Zoek talent" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-      <div className="row wrap">
-        <select className="in" style={{ width: "auto" }} aria-label="Locatie" value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })}><option value="">Overal</option>{Object.keys(CITIES).map((c) => <option key={c}>{c}</option>)}</select>
-        <button className={`chip ${f.now ? "on" : ""}`} aria-pressed={f.now} onClick={() => tog("now")}>Availability: Now</button>
-        <button className={`chip ${f.ut2 ? "on" : ""}`} aria-pressed={f.ut2} onClick={() => tog("ut2")}>UT2: Verified</button>
-        <button className={`chip ${f.offshore ? "on" : ""}`} aria-pressed={f.offshore} onClick={() => tog("offshore")}>Offshore: Yes</button>
-        <label className="row sm muted">Max €<input className="in" style={{ width: 80 }} type="number" value={f.maxRate} onChange={(e) => setF({ ...f, maxRate: +e.target.value })} />/u</label>
-      </div>
-    </section>
-    <section className="card"><table className="t"><thead><tr><th>Professional</th><th>Locatie</th><th>Beschikbaar</th><th>Tarief</th><th>Certificaten</th><th>Match</th><th /></tr></thead>
-      <tbody>{rows.map(({ x, m }) => (
-        <tr key={x.id}><td><div className="row"><span className="avatar">{initials(x.name)}</span><span><b>{x.name}</b><br /><span className="sm muted">{x.headline} · {x.projects} projecten</span></span></div></td>
-          <td>{x.city}</td><td>{AVAIL_LABEL[x.availability]}</td><td>€{x.rate}/u</td>
-          <td><div className="row wrap">{x.certs.map((c) => <span key={c.name} className="row xs">{c.name}<StatusBadge status={c.verified ? "verified" : "uploaded"} /></span>)}</div></td>
-          <td><span className="match">{m.score}%</span></td><td><button className="btn sm">Benader</button></td></tr>
-      ))}</tbody></table>
-      {!rows.length && <p className="muted" style={{ padding: 12 }}>Geen professionals met deze filters. Verruim locatie of tarief.</p>}
-    </section>
-  </>);
-}
-
-function BizMessages({ convs, update }) {
-  const [id, setId] = useState(convs[0]?.id);
-  const [text, setText] = useState("");
-  const c = convs.find((x) => x.id === id);
-  const send = (e) => {
-    e.preventDefault(); if (!text.trim()) return;
-    update((s) => ({ ...s, convs: s.convs.map((x) => (x.id === id ? { ...x, unread: (x.unread || 0) + 1, messages: [...x.messages, { from: "them", text, at: t() }] } : x)) }));
-    setText("");
-  };
-  return (<>
-    <Head title="Messages" sub="Gesprekken met kandidaten. Berichten komen direct in hun Workstr-inbox." />
-    <div className="cols" style={{ gridTemplateColumns: "280px 1fr" }}>
-      <section className="card list">{convs.map((x) => <button key={x.id} className="li" aria-current={x.id === id} onClick={() => setId(x.id)}><span className="avatar">SS</span><span className="grow"><b>Sem de Snoo</b><br /><span className="sm muted">{seedJobs.find((j) => j.id === x.job)?.title || "Vacature"}</span></span></button>)}
-        {!convs.length && <p className="muted">Nog geen gesprekken.</p>}</section>
-      {c && <section className="card" style={{ display: "flex", flexDirection: "column", minHeight: 420, padding: 0 }}>
-        <div className="msgs">{c.messages.map((m, i) => m.from === "sys" ? null : <div key={i} className={`msg ${m.from === "them" ? "me" : "them"}`}>{m.text}</div>)}</div>
-        <form className="composer" onSubmit={send}><input className="in" aria-label="Bericht" value={text} onChange={(e) => setText(e.target.value)} placeholder="Schrijf een bericht" /><button className="btn primary">Verstuur</button></form>
-      </section>}
-    </div>
-  </>);
-}
-
 function CompanyEdit() {
   const c = companies[ME_CO];
   return (<>
@@ -214,7 +174,7 @@ function Settings() {
   </>);
 }
 
-// ============================ Workstr MSP ============================
+// ============================ Workstr Managed (MSP) ============================
 export function Msp({ store, update }) {
   const [page, setPage] = useState("dashboard");
   const msp = store.msp;
@@ -225,7 +185,7 @@ export function Msp({ store, update }) {
     ["suppliers", "Suppliers", Truck], ["compliance", "Compliance", ShieldCheck], ["contracts", "Contracts", FileText],
     ["timesheets", "Timesheets", Timer], ["agents", "AI Agents", Robot, msp.approvals.length]];
   return (
-    <Shell sub="MSP" nav={nav} page={page} setPage={setPage}>
+    <Shell sub="Managed" nav={nav} page={page} setPage={setPage}>
       {page === "dashboard" && <MspDash {...ctx} go={setPage} />}
       {page === "requests" && <Requests {...ctx} />}
       {page === "workers" && <Workers />}

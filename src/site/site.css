@@ -166,3 +166,7 @@ html[data-theme="light"] .s-code { color: var(--primary-h); }
 .s-layer li { font-size: 13px; padding: 4px 10px; border-radius: 99px; background: var(--elev); border: 1px solid var(--border); transition: opacity .2s; }
 .s-layer li.off { opacity: .3; }
 @media (max-width: 900px) { .s-wires { grid-template-columns: 1fr; } .s-wires i:nth-child(n + 2) { display: none; } }
+
+.s-agents { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.s-agents > div { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: grid; gap: 4px; align-content: start; }
+@media (max-width: 900px) { .s-agents { grid-template-columns: 1fr 1fr; } }

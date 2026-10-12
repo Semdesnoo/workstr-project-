@@ -9,12 +9,12 @@ for (const theme of ["dark", "light"]) {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Less searching");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("AI Recruitment OS");
     await page.getByRole("tab", { name: "Build" }).click();
     await expect(page.getByText("Offshore Jacket Inspection")).toBeVisible();
     await page.getByRole("tab", { name: "Compliance" }).click();
     await expect(page.getByText(/VCA verlopen/)).toBeVisible();
-    await page.getByRole("link", { name: /Open MSP/ }).hover();
+    await page.getByRole("link", { name: /Open Managed/ }).hover();
   await expect(page.locator(".s-layer li.off")).toHaveCount(0);
   await page.getByRole("link", { name: /Open App/ }).hover();
   await expect(page.locator(".s-layer li.off")).toHaveCount(5);

@@ -2,13 +2,16 @@
 
 > Less searching. More working.
 
-Website + klikbare platform-MVP volgens de Workstr Master Project Brief.
+**AI Recruitment Operating System voor technische recruitment.** Drie delen: Workstr App · Workstr Business · Workstr Managed.
 
 - **Website** (`index.html` → `src/site/`): opbouw geïnspireerd op bird.com (rustige layout, grote tweekleurige koppen, live productmockups) en jaicob.ai (zoek-hero, feature-tabs, oud-vs-nieuw, AI-agents). Eigen merk, eigen teksten, geen overgenomen code, logo's of claims. Donker standaard, licht/donker-schakelaar.
 - **Platform** (`app.html` → `src/platform/`), één ecosysteem, drie interfaces:
   - `#/app`: Candidate App (mobile-first): Discover, Matches, Create, Inbox, Work Profile, Generate CV.
-  - `#/business`: Workstr Business: Overview, Vacancies, Talent, Messages, Company, Analytics, Settings.
-  - `#/msp`: Workstr MSP: Requests, Workers, Suppliers (+ portal), Compliance, Contracts, Timesheets, Agent Center (no-code agent templates, actielog, menselijke goedkeuring).
+  - `#/business`: Workstr Business, het AI Recruitment OS.
+    - Laag 1, ATS/CRM: kandidaten, vacatures, matchscore, pipeline (kanban), omnichannel berichten, agenda, triggers en workflows.
+    - Laag 2, automation: sourcing uit externe databases/LinkedIn, integraties (WhatsApp, e-mail, agenda) en een betrouwbare verzendwachtrij (idempotency, retries met backoff, dead-letter).
+    - 8 agents (`src/platform/agents.js`): Vacancy, Matching, Talent, Outreach, Screening, Compliance, Human Approval, Interview. Plus één volledige flow; afwijzen, twijfel en aanbod gaan altijd langs een mens.
+  - `#/managed`: Workstr Managed (MSP): Requests, Workers, Suppliers (+ portal), Compliance, Contracts, Timesheets, Agent Center.
 
 Regels (matching, certificaatstatus, compliance, timesheetcontroles, bedragen) zijn gewone code in `src/platform/logic.js`. De "AI"-structurering is een lokale extractor die alleen labelt wat de gebruiker schreef. Alles is demo-data in localStorage (reset: Profile → Demo resetten).
 
@@ -31,7 +34,7 @@ Node.js 22.12+.
 npm ci
 npm run dev
 npm run build
-node --test src/platform/logic.test.js   # unit
+node --test src/platform/*.test.js       # unit: matching, engine, agents
 npm test                                  # Playwright e2e + axe (WCAG AA), Edge
 ```
 
@@ -41,7 +44,7 @@ https://semdesnoo.github.io/workstr-project-/ (site) · `/app.html` (platform). 
 
 ## Nog niet gebouwd
 
-Echte backend/auth, echte AI-koppeling (server-side key), video, Word/PDF-parsing, facturatie-engine, betalingen. Klantlogo's en testimonials pas na toestemming van echte pilotklanten.
+Echte backend/auth en database, live kanalen (WhatsApp Cloud API, e-mailprovider, LinkedIn-partnerkoppeling, agenda) en een server-side worker voor de wachtrij; echte AI-koppeling (server-side key), video, Word/PDF-parsing, facturatie-engine, betalingen. Klantlogo's en testimonials pas na toestemming van echte pilotklanten.
 
 ## Media
 

@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { me, seedConversations, seedRequests, seedTimesheets, seedAgentLog, seedApprovals } from "./data.js";
+import { me, seedConversations, seedRequests, seedTimesheets, seedAgentLog, seedApprovals, seedCandidates, seedApps, seedEvents, seedMessages, seedWorkflows } from "./data.js";
 import Candidate from "./Candidate.jsx";
 import { Business, Msp } from "./Desk.jsx";
 import { Logo } from "./ui.jsx";
 import "./platform.css";
 
-const KEY = "workstr.v2";
+export const KEY = "workstr.v3";
 const seed = () => ({
   onboarded: false, profile: me, jobs: [], convs: seedConversations, saved: [], dismissed: [], interested: [],
   msp: { requests: seedRequests, timesheets: seedTimesheets, log: seedAgentLog, approvals: seedApprovals },
+  ats: { candidates: seedCandidates, apps: seedApps, events: seedEvents, messages: seedMessages, workflows: seedWorkflows, tasks: [], runs: [], queue: [], outage: {} },
 });
 
 // One shared demo store so the ecosystem is visible: a vacancy published in
@@ -19,14 +20,14 @@ function useStore() {
   return [s, set];
 }
 
-const SURFACES = [["app", "App"], ["business", "Business"], ["msp", "MSP"]];
+const SURFACES = [["app", "App"], ["business", "Business"], ["managed", "Managed"]];
 const read = () => (SURFACES.some(([k]) => location.hash === `#/${k}`) ? location.hash.slice(2) : "app");
 
 export default function Platform() {
   const [store, update] = useStore();
   const [surface, setSurface] = useState(read);
   useEffect(() => { const on = () => setSurface(read()); addEventListener("hashchange", on); return () => removeEventListener("hashchange", on); }, []);
-  useEffect(() => { document.title = { app: "Workstr", business: "Workstr Business", msp: "Workstr MSP" }[surface]; }, [surface]);
+  useEffect(() => { document.title = { app: "Workstr App", business: "Workstr Business", managed: "Workstr Managed" }[surface]; }, [surface]);
 
   return (<>
     <nav className="switcher" aria-label="Workstr producten">
@@ -38,12 +39,12 @@ export default function Platform() {
           <Logo size={28} />
           <h1>Less searching.<br />More working.</h1>
           <p className="muted">Eén levend Work Profile met projecten, skills en certificaten. Werk dat past komt naar jou toe — en Workstr legt altijd uit waarom.</p>
-          <p className="muted sm" style={{ marginTop: 24 }}>Probeer: tik op <b>Interesse</b>, open daarna <b>Business → Messages</b>. Of publiceer een vacature in Business en zie hem verschijnen in Discover.</p>
+          <p className="muted sm" style={{ marginTop: 24 }}>Probeer: publiceer een vacature in <b>Business</b> en zie hem verschijnen in Discover — of importeer een kandidaat via <b>Business → Sourcing</b> en zie de workflows draaien.</p>
         </aside>
         <div className="phone"><Candidate store={store} update={update} /></div>
       </div>
     )}
     {surface === "business" && <Business store={store} update={update} />}
-    {surface === "msp" && <Msp store={store} update={update} />}
+    {surface === "managed" && <Msp store={store} update={update} />}
   </>);
 }

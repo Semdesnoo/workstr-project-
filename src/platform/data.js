@@ -147,12 +147,58 @@ export const talent = [
     skills: ["MIG/MAG", "Lassen", "Tekeninglezen"], certs: [{ name: "VCA", verified: true }], projects: 1 },
 ];
 
-export const bizCandidates = [
-  { name: "Youssef El Amrani", job: "NDT Inspector", stage: "Nieuw", score: 94 },
-  { name: "Sem de Snoo", job: "NDT Inspector", stage: "Gesprek", score: 92 },
-  { name: "Pieter Bos", job: "QA/QC Inspector Offshore Wind", stage: "Nieuw", score: 81 },
-  { name: "Anouk de Graaf", job: "QA/QC Inspector Offshore Wind", stage: "Shortlist", score: 88 },
-  { name: "Kim Jansen", job: "Welding Inspector (CSWIP 3.1)", stage: "Aanbod", score: 90 },
+// ---- Business ATS/CRM (layer 1) + sourcing (layer 2) -------------------------
+const cert = (name, days, verified = true) => ({ name, validUntil: d(days), verified });
+export const seedCandidates = [
+  { id: "c1", name: "Sem de Snoo", headline: "NDT Inspector · UT2 / PAUT", city: "Schiedam", email: "sem@example.nl", phone: "+31612345678", source: "Workstr app", availability: "2w", rate: 55,
+    skills: ["UT", "PAUT", "NDT", "Weld Inspection", "Offshore"], certs: [cert("UT2", 540), cert("VCA", 410), cert("BOSIET", 24)], tags: ["Offshore"] },
+  { id: "c2", name: "Youssef El Amrani", headline: "UT/MT Inspector", city: "Rotterdam", email: "youssef@example.nl", phone: "+31687654321", source: "Workstr app", availability: "now", rate: 58,
+    skills: ["UT", "MT", "NDT", "Offshore", "Weld Inspection"], certs: [cert("UT2", 320), cert("VCA", 200), cert("BOSIET", 300, false)], tags: ["Rotatie 14/14"] },
+  { id: "c3", name: "Kim Jansen", headline: "Welding Inspector CSWIP 3.1", city: "Vlissingen", email: "kim@example.nl", phone: "", source: "Leverancier", availability: "1m", rate: 62,
+    skills: ["Weld Inspection", "VT", "WPS"], certs: [cert("CSWIP 3.1", 700), cert("VCA", 18)], tags: [] },
+  { id: "c4", name: "Pieter Bos", headline: "PAUT / ToFD Level 2", city: "Antwerpen", email: "pieter@example.be", phone: "+32470123456", source: "Externe database", availability: "now", rate: 70,
+    skills: ["PAUT", "ToFD", "UT", "NDT"], certs: [cert("UT2", 600), cert("PAUT", 400)], tags: ["België"] },
+  { id: "c5", name: "Anouk de Graaf", headline: "QA/QC Coordinator Offshore", city: "Den Helder", email: "anouk@example.nl", phone: "+31611122233", source: "LinkedIn", availability: "now", rate: 68,
+    skills: ["NDT", "Offshore", "Coating Inspection", "Rapportage"], certs: [cert("BOSIET", 80), cert("VCA", 500), cert("UT2", 260)], tags: [] },
+  { id: "c6", name: "Lars Meijer", headline: "MIG/MAG Lasser", city: "Moerdijk", email: "lars@example.nl", phone: "+31655566677", source: "Workstr app", availability: "2w", rate: 38,
+    skills: ["MIG/MAG", "Lassen", "Tekeninglezen"], certs: [cert("VCA", 300)], tags: [] },
+];
+export const seedApps = [
+  { id: "a1", cand: "c1", job: "j1", stage: "Gesprek" }, { id: "a2", cand: "c2", job: "j1", stage: "Nieuw" },
+  { id: "a3", cand: "c5", job: "j4", stage: "Benaderd" }, { id: "a4", cand: "c4", job: "j4", stage: "Nieuw" },
+  { id: "a5", cand: "c3", job: "j3", stage: "Aanbod" }, { id: "a6", cand: "c6", job: "j5", stage: "Geplaatst" },
+];
+const day = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+export const seedEvents = [
+  { id: "ev1", cand: "c1", job: "j1", date: day(1), time: "10:00", type: "Videogesprek" },
+  { id: "ev2", cand: "c3", job: "j3", date: day(2), time: "14:30", type: "Op locatie" },
+];
+export const seedMessages = [
+  { id: "m1", cand: "c1", channel: "app", dir: "in", text: "Hoi, ik heb interesse in het jacket-project. Wanneer kunnen we bellen?", at: d(-1) },
+  { id: "m2", cand: "c1", channel: "whatsapp", dir: "out", text: "Top Sem! Morgen 10:00 videogesprek, link volgt per mail.", at: d(-1), status: "sent" },
+  { id: "m3", cand: "c5", channel: "email", dir: "out", text: "Hoi Anouk, we zoeken een QA/QC Inspector voor offshore wind in Eemshaven. Interesse?", at: d(-3), status: "sent" },
+];
+export const seedWorkflows = [
+  { id: "wf1", name: "Welkom + eerste contact", on: true, trigger: "candidate.created", when: { minScore: 75 },
+    actions: [{ type: "message", channel: "whatsapp", template: "Hoi {voornaam}! Je profiel past voor {score}% bij {vacature} in {plaats}. Zin in een kort belletje?" }, { type: "stage", to: "Benaderd" }] },
+  { id: "wf2", name: "Gespreksbevestiging", on: true, trigger: "interview.scheduled",
+    actions: [{ type: "message", channel: "email", template: "Beste {voornaam}, bevestiging van ons gesprek voor {vacature} op {datum} om {tijd}." }, { type: "stage", to: "Gesprek" }] },
+  { id: "wf3", name: "Follow-up zonder reactie", on: true, trigger: "no_reply",
+    actions: [{ type: "message", channel: "whatsapp", template: "Hoi {voornaam}, nog interesse in {vacature}? Laat gerust even iets weten." }, { type: "task", text: "Bel {voornaam} als er morgen nog geen reactie is" }] },
+  { id: "wf4", name: "Nette afwijzing", on: true, trigger: "stage.changed", when: { stage: "Afgewezen" },
+    actions: [{ type: "message", channel: "email", template: "Beste {voornaam}, dank voor je interesse in {vacature}. We gaan helaas verder met andere kandidaten." }] },
+  { id: "wf5", name: "Certificaat verloopt", on: true, trigger: "cert.expiring",
+    actions: [{ type: "message", channel: "whatsapp", template: "Hoi {voornaam}, je {certificaat} verloopt over {dagen} dagen. Upload je nieuwe certificaat in de Workstr app." }] },
+];
+
+// External sourcing pool (layer 2). Demo dataset — live: LinkedIn partner API / data provider.
+export const externalPool = [
+  { id: "x1", name: "Daan Vermeulen", headline: "NDT Level 2 UT/MT", city: "Rotterdam", source: "LinkedIn", email: "", phone: "", availability: "1m", rate: 60, skills: ["UT", "MT", "NDT", "Offshore"], certs: [cert("UT2", 400), cert("BOSIET", 200)] },
+  { id: "x2", name: "Ilse Kramer", headline: "Coating Inspector NACE 2", city: "Vlissingen", source: "Externe database", email: "ilse@example.nl", phone: "+31622233344", availability: "now", rate: 64, skills: ["Coating Inspection", "Offshore", "Rapportage"], certs: [cert("VCA", 300)] },
+  { id: "x3", name: "Tomasz Nowak", headline: "TIG/MIG Lasser 6G", city: "Moerdijk", source: "Externe database", email: "tomasz@example.pl", phone: "+48600111222", availability: "now", rate: 42, skills: ["TIG", "MIG/MAG", "Lassen"], certs: [cert("VCA", 120)] },
+  { id: "x4", name: "Rik Hoekstra", headline: "PAUT Technician Level 2", city: "Schiedam", source: "LinkedIn", email: "", phone: "", availability: "2w", rate: 66, skills: ["PAUT", "UT", "NDT", "Weld Inspection"], certs: [cert("UT2", 500), cert("PAUT", 380), cert("VCA", 400)] },
+  { id: "x5", name: "Sara Bakker", headline: "QA/QC Inspector Energy", city: "Eemshaven", source: "Externe database", email: "sara@example.nl", phone: "+31633344455", availability: "now", rate: 70, skills: ["NDT", "UT", "Offshore", "Coating Inspection"], certs: [cert("UT2", 300), cert("BOSIET", 250), cert("GWO", 300)] },
+  { id: "x6", name: "Mehmet Yilmaz", headline: "Welding Inspector CSWIP 3.1", city: "Antwerpen", source: "LinkedIn", email: "", phone: "", availability: "1m", rate: 65, skills: ["Weld Inspection", "VT", "WPS"], certs: [cert("CSWIP 3.1", 600)] },
 ];
 
 export const plans = [

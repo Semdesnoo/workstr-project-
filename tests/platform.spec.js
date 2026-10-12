@@ -25,7 +25,7 @@ test("candidate app: onboarding → match uitleg → interesse → business inbo
   await page.screenshot({ path: "test-results/platform-profile.png" });
 
   await page.goto("/app.html#/business");
-  await page.getByRole("button", { name: /Vacancies/ }).click();
+  await page.getByRole("button", { name: /^Vacatures/ }).click();
   await page.getByRole("button", { name: "Nieuwe vacature" }).click();
   await page.getByRole("button", { name: "Voorbeeld plakken" }).click();
   await page.getByRole("button", { name: "Structureer" }).click();
@@ -33,7 +33,7 @@ test("candidate app: onboarding → match uitleg → interesse → business inbo
   await expect(page.getByRole("cell", { name: "NDT Inspector Monopiles" })).toBeVisible();
   await page.screenshot({ path: "test-results/platform-business.png" });
 
-  await page.goto("/app.html#/msp");
+  await page.goto("/app.html#/managed");
   await page.getByRole("button", { name: /Timesheets/ }).click();
   await expect(page.getByText(/overuren niet goedgekeurd/)).toBeVisible();
   await page.getByRole("button", { name: /AI Agents/ }).click();
@@ -44,6 +44,43 @@ test("candidate app: onboarding → match uitleg → interesse → business inbo
   await page.getByRole("button", { name: "Zet live" }).click();
   await expect(page.getByText(/Nieuwe agent live: Talent outreach/)).toBeVisible();
   await page.screenshot({ path: "test-results/platform-msp.png", fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+test("business: 8 agents draaien de volledige flow met human approval", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/app.html#/business");
+  await page.getByRole("button", { name: /^AI Agents/ }).click();
+  for (const a of ["Vacancy Agent", "Matching Agent", "Talent Agent", "Outreach Agent", "Screening Agent", "Compliance Agent", "Human Approval", "Interview Agent"])
+    await expect(page.getByRole("region", { name: a, exact: true })).toBeVisible();
+
+  // Vacancy Agent → new vacancy becomes the flow target
+  await page.getByRole("button", { name: "Voorbeeld plakken" }).click();
+  await page.getByRole("button", { name: "Run Vacancy Agent" }).click();
+  await expect(page.getByLabel("Vacature voor agents")).toHaveValue(/^j/);
+  await expect(page.getByLabel("Vacature voor agents").locator("option:checked")).toHaveText(/QA\/QC Inspector Offshore Wind/);
+
+  await page.getByRole("button", { name: "Start volledige flow" }).click();
+  await expect(page.getByRole("button", { name: "Start volledige flow" })).toBeEnabled({ timeout: 10000 });
+  const log = page.getByRole("region", { name: "Agent-log" }).or(page.locator("section", { hasText: "Agent-log" }).last());
+  await expect(log).toContainText(/Interview/);
+  await expect(log).toContainText(/Outreach/);
+  await page.screenshot({ path: "test-results/business-agents.png", fullPage: true });
+
+  // worker delivers queued messages in the background
+  await page.getByRole("button", { name: /^Achtergrondtaken/ }).click();
+  await expect(page.getByText("Verzonden").first()).toBeVisible({ timeout: 6000 });
+
+  await page.getByRole("button", { name: /^Agenda/ }).click();
+  await page.getByRole("button", { name: "Volgende →" }).click();
+  await page.getByRole("button", { name: "Deze week" }).click();
+  await page.getByRole("button", { name: /^Pipeline/ }).click();
+  await expect(page.locator(".lane").first()).toBeVisible();
+  await page.getByRole("button", { name: /^Kandidaten/ }).click();
+  await expect(page.getByRole("button", { name: "Sem de Snoo" })).toBeVisible();
   expect(errors).toEqual([]);
 });
 

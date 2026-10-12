@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ArrowRight, CheckCircle, WarningCircle, Sparkle, Robot, ShieldCheck, Timer, Truck, FileText, Moon, Sun, List, X,
+  ArrowRight, CheckCircle, Users, Lightning, WarningCircle, Sparkle, Robot, ShieldCheck, Timer, Truck, FileText, Moon, Sun, List, X,
   MagnifyingGlass, Compass, UserCircle, Buildings, Plus,
 } from "@phosphor-icons/react";
 import { Logo, initials } from "../platform/ui.jsx";
 import { talent, plans } from "../platform/data.js";
+import { AGENTS } from "../platform/agents.js";
 import "../platform/platform.css";
 import "./site.css";
 
@@ -32,7 +33,7 @@ function useTheme() {
 function Nav() {
   const [theme, toggle] = useTheme();
   const [open, setOpen] = useState(false);
-  const links = [["#product", "Product"], ["#professionals", "Voor professionals"], ["#bedrijven", "Voor bedrijven"], ["#msp", "MSP"], ["#platform", "Platform"], ["#prijzen", "Prijzen"]];
+  const links = [["#lagen", "Business"], ["#product", "App"], ["#managed", "Managed"], ["#platform", "Platform"], ["#prijzen", "Prijzen"]];
   return (
     <header className="s-nav">
       <a href="#top" aria-label="Workstr home"><Logo /></a>
@@ -89,11 +90,34 @@ function HeroSearch() {
 function Hero() {
   return (
     <section className="s-hero" id="top">
-      <span className="s-pill"><span className="s-dot" />Nu in pilot: technische arbeidsmarkt</span>
-      <h1>Less searching.<br /><span className="s-dim">More working.</span></h1>
-      <p className="s-lead">Workstr is het werkplatform waar professionals hun werkidentiteit bouwen, kansen ontdekken — en bedrijven hun complete workforce beheren.</p>
-      <div className="row s-ctas"><a className="btn primary" href={APP}>Probeer de app <ArrowRight size={16} /></a><a className="btn" href={`${APP}#/business`}>Bekijk Workstr Business</a></div>
+      <span className="s-pill"><span className="s-dot" />Less searching. More working.</span>
+      <h1>AI Recruitment OS<br /><span className="s-dim">voor technische recruitment.</span></h1>
+      <p className="s-lead">ATS/CRM, sourcing, WhatsApp, e-mail en AI-agents in één systeem. Gebouwd voor NDT, QA/QC, welding, offshore en energy.</p>
+      <div className="row s-ctas"><a className="btn primary" href={`${APP}#/business`}>Bekijk Workstr Business <ArrowRight size={16} /></a><a className="btn" href={APP}>Probeer de app</a></div>
       <HeroSearch />
+    </section>
+  );
+}
+
+function Layers() {
+  const L = [
+    ["Laag 1", "ATS / CRM", "Het systeem waar je recruiters de hele dag in werken.", ["Kandidaten", "Vacatures", "Matchscore", "Pipeline", "Berichten", "Agenda", "Triggers & workflows"], Users],
+    ["Laag 2", "Automation & bereik", "Waar het werk vanzelf gebeurt — ook als niemand kijkt.", ["Sourcing uit externe databases", "LinkedIn-integratie", "WhatsApp", "E-mail", "Betrouwbare achtergrondprocessen"], Lightning],
+  ];
+  return (
+    <section className="s-sec" id="lagen">
+      <h2 className="s-h2">Workstr Business.<br /><span className="s-dim">Twee lagen, één systeem.</span></h2>
+      <p className="s-sub">Een complete ATS/CRM als fundament. Daarbovenop sourcing, kanalen en agents die 24/7 doorwerken.</p>
+      <div className="s-vs">{L.map(([tag, h, p, items, I]) => (
+        <div key={tag} className={`card stack ${tag === "Laag 2" ? "s-new" : ""}`}><div className="row between"><span className={`tag ${tag === "Laag 2" ? "ai" : ""}`}>{tag}</span><I size={22} /></div>
+          <h3 style={{ fontSize: 26 }}>{h}</h3><p className="muted">{p}</p>
+          <ul className="reasons">{items.map((x) => <li key={x}><CheckCircle size={18} weight="fill" className="ok" />{x}</li>)}</ul>
+          <a className="s-link" href={`${APP}#/business`}>Open in Workstr Business <ArrowRight size={14} /></a></div>
+      ))}</div>
+      <div className="card stack" style={{ marginTop: 16 }}>
+        <div className="row between wrap"><h3 style={{ fontSize: 22 }}>8 recruitment-agents. Eén flow van vacature tot gesprek.</h3><a className="s-link" href={`${APP}#/business`}>Start de flow <ArrowRight size={14} /></a></div>
+        <div className="s-agents">{AGENTS.map((a, i) => <div key={a.id}><span className="xs muted">{String(i + 1).padStart(2, "0")}</span><b>{a.name}</b><p className="xs muted">{a.role}</p></div>)}</div>
+      </div>
     </section>
   );
 }
@@ -197,12 +221,12 @@ function Flow() {
   }, [seen, step]);
   const f = FLOWS[t];
   return (
-    <section className="s-sec" id="msp" ref={ref}>
+    <section className="s-sec" id="managed" ref={ref}>
       <h2 className="s-h2">Van vraag tot plaatsing.</h2>
       <p className="s-sub">Stel een vraag in gewone taal. Workstr-agents voeren de stappen uit en laten zien wat ze deden.</p>
       <div className="s-seg" role="tablist">{FLOWS.map((x, k) => <button key={x.tab} role="tab" aria-selected={t === k} onClick={() => setT(k)}>{x.tab}</button>)}</div>
       <div className="s-console">
-        <div className="s-prompt"><span className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>MSP</span><p>{f.prompt}</p></div>
+        <div className="s-prompt"><span className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>Jij</span><p>{f.prompt}</p></div>
         <div className="s-steps"><span className="xs muted"><Robot size={14} /> Workstr AI Orchestrator</span>
           <ol>{f.steps.map(([tool, out], k) => (
             <li key={tool} className={step > k ? "on" : ""}><code>{tool}</code><span className="grow" />{step > k ? <span className="badge verified">{out}</span> : <span className="s-spin" aria-hidden />}</li>
@@ -272,14 +296,14 @@ const ENGINE = [
 ];
 const USES = {
   App: ["Skills", "Projects", "Preferences", "Location", "Support", "Profiles", "Vacancies", "Documents", "Messages"],
-  Business: ["Skills", "Projects", "Preferences", "Location", "Support", "Recruitment", "Profiles", "Vacancies", "Messages"],
-  MSP: ENGINE.flatMap(([, , items]) => items),
+  Business: ["Skills", "Projects", "Preferences", "Location", "Support", "Recruitment", "Compliance", "Profiles", "Vacancies", "Documents", "Messages"],
+  Managed: ENGINE.flatMap(([, , items]) => items),
 };
 function Products() {
   const [hl, setHl] = useState(null);
   const p = [["App", "Candidates · Freelancers", "Work Profile, Discover, matches, chat, automatisch CV.", "#/app"],
     ["Business", "Employers · Recruiters", "Vacatures, talent search, berichten en analytics.", "#/business"],
-    ["MSP", "Enterprise · MSP teams", "Requests, leveranciers, compliance, contracten, uren en agents.", "#/msp"]];
+    ["Managed", "Enterprise · MSP teams", "Workstr beheert je externe inhuur: leveranciers, compliance, contracten, uren en agents.", "#/managed"]];
   const on = (item) => !hl || USES[hl].includes(item);
   return (
     <section className="s-sec" id="platform">
@@ -313,7 +337,7 @@ function Pricing() {
           <ul className="reasons">{x.items.map((i) => <li key={i}><CheckCircle size={18} weight="fill" className="ok" />{i}</li>)}</ul>
           <a className={`btn ${x.name === "Starter" ? "primary" : ""}`} href={`${APP}#/business`}>Start {x.name}</a></div>
       ))}</div>
-      <p className="xs muted" style={{ marginTop: 12 }}>MSP: management fee per gewerkt uur of per actieve externe — op aanvraag. Prijzen indicatief tijdens de pilot.</p>
+      <p className="xs muted" style={{ marginTop: 12 }}>Workstr Managed: management fee per gewerkt uur of per actieve externe — op aanvraag. Prijzen indicatief tijdens de pilot.</p>
     </section>
   );
 }
@@ -343,7 +367,7 @@ function Faq() {
 }
 
 function Footer() {
-  const cols = [["Product", [["App", "#/app"], ["Business", "#/business"], ["MSP", "#/msp"]]], ["Bedrijf", [["Over Workstr", "#top"], ["Pilot", "#top"], ["Contact", "mailto:hello@workstr.ai"]]], ["Juridisch", [["Privacy", "#top"], ["AI-transparantie", "#top"], ["Voorwaarden", "#top"]]]];
+  const cols = [["Product", [["App", "#/app"], ["Business", "#/business"], ["Managed", "#/managed"]]], ["Bedrijf", [["Over Workstr", "#top"], ["Pilot", "#top"], ["Contact", "mailto:hello@workstr.ai"]]], ["Juridisch", [["Privacy", "#top"], ["AI-transparantie", "#top"], ["Voorwaarden", "#top"]]]];
   return (<>
     <section className="s-final">
       <h2>Work should find you.</h2>
@@ -358,5 +382,5 @@ function Footer() {
 }
 
 export default function Site() {
-  return (<><Nav /><main><Hero /><Strip /><Product /><Flow /><OldNew /><Admin /><Chart /><Products /><Pricing /><Control /><Faq /></main><Footer /></>);
+  return (<><Nav /><main><Hero /><Strip /><Layers /><Product /><Flow /><OldNew /><Admin /><Chart /><Products /><Pricing /><Control /><Faq /></main><Footer /></>);
 }
