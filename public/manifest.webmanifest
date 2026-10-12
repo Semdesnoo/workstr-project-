@@ -1,13 +1,13 @@
 {
   "name": "Workstr",
   "short_name": "Workstr",
-  "description": "Swipe naar je volgende baan. Upload je cv, ontdek je matches en start het gesprek.",
+  "description": "Less searching. More working.",
   "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#0B0C0F",
+  "theme_color": "#0B0C0F",
   "icons": [
     { "src": "./logo.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "./logo.png", "sizes": "192x192", "type": "image/png", "purpose": "any" }

@@ -2,6 +2,16 @@
 
 Nederlandse conceptwebsite en interactieve vacaturedemo, gebaseerd op de aangeleverde Workstr-presentatie. De layout gebruikt 187n.ai als referentie: gecentreerde merkopening, interactieve functietabs, contrasterende kleurvlakken, draaibare showcase, uitklapbare partnerinformatie, een conversationeel contactformulier en grote footer. Geen broncode, bedrijfsclaims, klantlogo's of media van de referentiesite zijn overgenomen.
 
+## Workstr platform (`app.html`)
+
+Klikbare MVP volgens de Master Project Brief: één ecosysteem, drie interfaces.
+
+- `#/app` — Candidate App (mobile-first): Discover, Matches (Weekly Opportunities), Create (project → AI-structurering → review), Inbox met AI-suggesties, Work Profile met certificaatstatussen, beschikbaarheid en **Generate CV** (PDF via print).
+- `#/business` — Workstr Business: Overview, Vacancies (tekst plakken → gestructureerd → live in Discover), Talent Search, Messages, Company, Analytics, Settings.
+- `#/msp` — Workstr MSP: Requests, Workers, Suppliers (+ supplier portal), Compliance, Contracts, Timesheets, Agent Center met actielog en menselijke goedkeuring.
+
+Regels (matching, certificaatstatus, compliance, timesheetcontroles, bedragen) zijn gewone code in `src/platform/logic.js` — getest met `node --test src/platform/logic.test.js`. De "AI"-structurering is een lokale extractor die alleen labelt wat de gebruiker schreef. Demo-data, opgeslagen in localStorage (reset via Profile → Demo resetten). Foto's: Unsplash.
+
 ## Starten
 
 Node.js 22.12+.
