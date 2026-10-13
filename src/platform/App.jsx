@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { CellSignalFull, WifiHigh, BatteryFull } from "@phosphor-icons/react";
 import { me, seedRequests, seedTimesheets, seedAgentLog, seedApprovals } from "./data.js";
 import Candidate from "./Candidate.jsx";
 import Biz from "./Biz.jsx";
@@ -37,7 +38,13 @@ export default function Platform() {
     {surface !== "ats" && <nav className="switcher" aria-label="Workstr producten">
       {SURFACES.map(([k, l]) => <a key={k} href={`#/${k}`} aria-current={surface === k ? "page" : undefined}>{l}</a>)}
     </nav>}
-    {surface === "app" && <div className="appwide"><Candidate store={store} update={update} /></div>}
+    {surface === "app" && <div className="appwide">
+      <div className="iphone">
+        <span className="island" aria-hidden /><div className="statusbar" aria-hidden><span>9:41</span><span><CellSignalFull size={17} weight="fill" /><WifiHigh size={17} weight="bold" /><BatteryFull size={24} weight="fill" /></span></div>
+        <Candidate store={store} update={update} />
+        <span className="homebar" aria-hidden />
+      </div>
+    </div>}
     {surface === "business" && <Biz store={store} update={update} />}
     {surface === "managed" && <Msp store={store} update={update} />}
     {surface === "ats" && <BusinessGate />}

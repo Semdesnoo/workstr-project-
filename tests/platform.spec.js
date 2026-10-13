@@ -108,16 +108,18 @@ test("bedrijf wil jou spreken: accepteren vanuit Matches + harde poort zichtbaar
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
 });
 
-test("desktop: app krijgt zijbalk en brede weergave", async ({ page }) => {
+test("desktop: app in iPhone-frame, mobiel schermvullend", async ({ page }) => {
   await fresh(page);
   await page.getByRole("button", { name: "Bekijk met demoprofiel (Sem)" }).click();
-  const nav = page.getByRole("navigation", { name: "Hoofdmenu" });
-  const box = await nav.boundingBox();
-  expect(box.width).toBeLessThan(260);
-  expect(box.height).toBeGreaterThan(400);
-  await page.getByRole("button", { name: /^Profile/ }).click();
-  await expect(page.getByRole("button", { name: /Vindbaar voor bedrijven/ })).toBeVisible();
-  await page.screenshot({ path: "test-results/proto-desktop-profile.png" });
+  const phone = await page.locator(".iphone").boundingBox();
+  expect(phone.width).toBe(393);
+  const nav = await page.getByRole("navigation", { name: "Hoofdmenu" }).boundingBox();
+  expect(nav.y).toBeGreaterThan(phone.y + phone.height - 120); // pill nav at the bottom of the phone
+  await page.screenshot({ path: "test-results/proto-iphone.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const full = await page.locator(".iphone").boundingBox();
+  expect(full.width).toBe(390);
+  await expect(page.locator(".statusbar")).toBeHidden();
 });
 
 test("managed blijft werken", async ({ page }) => {
