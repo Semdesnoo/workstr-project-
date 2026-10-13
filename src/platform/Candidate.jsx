@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Compass, Sparkle, Plus, ChatCircle, User, MapPin, Clock, Briefcase, CurrencyEur, BookmarkSimple, X, Check,
+  Sparkle, Plus, ChatCircle, User, MapPin, Briefcase, CurrencyEur, X, Check,
   Warning, ArrowLeft, PaperPlaneRight, Camera, Certificate, GraduationCap, Wrench, FilePdf, Lightning, CaretRight,
-  Buildings, ImageSquare, SlidersHorizontal, Heart, Eye, EyeSlash,
+  Buildings, ImageSquare, SlidersHorizontal, Heart, Eye, EyeSlash, MagnifyingGlass, ArrowRight, House,
 } from "@phosphor-icons/react";
 import { showInterest, sendMessage, markRead, decline, isMatch, findInterest } from "./loop.js";
 import { companies, seedJobs, CITIES } from "./data.js";
@@ -68,7 +68,7 @@ export default function Candidate({ store, update }) {
   const ctx = { store, update, p, jobs, byId, mine, setJobId, setCompanyId, setChatId, openChat, setCreate, interest, save, dismiss, setToast, setCv, setPrefs, setTab };
   return (
     <div className="app">
-      <div className="screen" style={tab === "discover" ? { overflow: "hidden" } : undefined}>
+      <div className="screen">
         {tab === "discover" && <Discover {...ctx} />}
         {tab === "matches" && <Matches {...ctx} />}
         {tab === "create" && <CreateHub {...ctx} />}
@@ -76,11 +76,10 @@ export default function Candidate({ store, update }) {
         {tab === "profile" && <Profile {...ctx} />}
       </div>
       <nav className="tabs" aria-label="Hoofdmenu">
-        {[["discover", "Discover", Compass], ["matches", "Matches", Sparkle], ["create", "Create", Plus], ["inbox", "Inbox", ChatCircle], ["profile", "Profile", User]].map(([id, label, Icon]) => (
-          <button key={id} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}>
-            {id === "create" ? <span className="create"><Icon size={22} weight="bold" /></span> : <Icon size={24} weight={tab === id ? "fill" : "regular"} />}
-            {label}
-            {id === "matches" && unread > 0 && <span className="dot" aria-label={`${unread} nieuw`} />}
+        {[["discover", "Discover", House], ["matches", "Matches", Sparkle], ["create", "Create", Plus], ["inbox", "Inbox", ChatCircle], ["profile", "Profile", User]].map(([id, label, Icon]) => (
+          <button key={id} aria-label={label} aria-current={tab === id ? "page" : undefined} onClick={() => setTab(id)}>
+            <Icon size={22} weight={tab === id ? "fill" : "regular"} /><span className="lbl">{label}</span>
+            {id === "matches" && unread > 0 && <span className="dot" />}
           </button>
         ))}
       </nav>
@@ -97,7 +96,8 @@ export default function Candidate({ store, update }) {
 }
 
 function Avatar({ p, lg }) {
-  return p.photo ? <img className={`avatar ${lg ? "lg" : ""}`} src={p.photo} alt="" style={{ objectFit: "cover", padding: 0 }} /> : <span className={`avatar ${lg ? "lg" : ""}`}>{initials(p.name || "?")}</span>;
+  return p.photo ? <img className={`avatar ${lg ? "lg" : ""}`} src={p.photo} alt="" style={{ objectFit: "cover", padding: 0 }} />
+    : <span className={`avatar ${lg ? "lg" : ""}`}>{initials(p.name || "") || <Camera size={lg ? 26 : 18} />}</span>;
 }
 
 function MatchModal({ i, job, p, onChat, onLater }) {
@@ -107,7 +107,7 @@ function MatchModal({ i, job, p, onChat, onLater }) {
       <div className="stack" style={{ margin: "auto", padding: 28, textAlign: "center", justifyItems: "center", maxWidth: 420 }}>
         <div className="row" style={{ gap: 0 }}><Avatar p={p} lg /><span className="avatar lg" style={{ marginLeft: -14, background: "var(--elev)", color: "var(--text)", border: "3px solid var(--bg)" }}>{initials(c.name)}</span></div>
         <h1 style={{ fontSize: 40 }}>It's a match</h1>
-        <p className="muted">Jij en {c.name} willen allebei praten over <b style={{ color: "var(--text)" }}>{job.title}</b>. Geen motivatiebrief nodig.</p>
+        <p className="muted">Jij en {c.name} willen allebei praten over <b style={{ color: "#fff" }}>{job.title}</b>. Geen motivatiebrief nodig.</p>
         <button className="btn primary block" onClick={onChat}><ChatCircle size={18} />Start gesprek</button>
         <button className="btn ghost block" onClick={onLater}>Later</button>
       </div>
@@ -136,13 +136,25 @@ function Onboarding({ store, update }) {
   const valid = [f.name.trim() && f.headline.trim(), f.skills.length > 0, true, f.contracts.length > 0][step];
 
   if (step === 0 && !f.started) return (
-    <div className="app" style={{ background: "url(./work/w2.jpg) center/cover" }}>
-      <div className="onb-splash">
-        <Logo size={30} />
-        <h1 style={{ fontSize: 40 }}>Less searching.<br />More working.</h1>
-        <p className="muted">Bouw één levend Work Profile met je projecten, skills en certificaten. Werk komt naar jou toe — en je ziet altijd waarom het past.</p>
-        <button className="btn primary block" onClick={() => set("started", true)}>Maak je Work Profile</button>
-        <button className="btn ghost block" onClick={useDemo}>Bekijk met demoprofiel (Sem)</button>
+    <div className="onb">
+      <div className="onb-art" aria-hidden>
+        <div className="bubble" style={{ width: 150, height: 150, left: "10%", top: "14%", "--ring": "#c9c7ff" }}><img src="./work/w2.jpg" alt="" /></div>
+        <div className="bubble" style={{ width: 112, height: 112, right: "12%", top: "8%", "--ring": "#ffe2a8" }}><img src="./work/w5.jpg" alt="" /></div>
+        <div className="bubble" style={{ width: 124, height: 124, left: "38%", top: "44%", "--ring": "#bdf0d2" }}><img src="./work/w7.jpg" alt="" /></div>
+        <span className="pillname glass" style={{ left: "44%", top: "33%" }}>UT2 · Offshore</span>
+        <span className="dotb" style={{ width: 22, height: 22, left: "6%", top: "58%", background: "#c9c7ff" }} />
+        <span className="dotb" style={{ width: 12, height: 12, right: "18%", top: "52%", background: "#bdf0d2" }} />
+        <span className="dotb" style={{ width: 34, height: 34, right: "-10px", top: "30%", background: "#7c78ff" }} />
+        <span className="dotb" style={{ width: 10, height: 10, left: "30%", top: "8%", background: "#ffe2a8" }} />
+        <h1>Less searching.<br />More working.</h1>
+      </div>
+      <div>
+        <div className="onb-sheet">
+          <Logo size={24} />
+          <p className="muted">Eén levend Work Profile met je projecten, skills en certificaten. Werk komt naar jou toe — en je ziet altijd waarom het past.</p>
+          <button className="btn primary block" onClick={() => set("started", true)}>Maak je Work Profile</button>
+          <button className="btn ghost block" onClick={useDemo}>Bekijk met demoprofiel (Sem)</button>
+        </div>
       </div>
     </div>
   );
@@ -153,7 +165,7 @@ function Onboarding({ store, update }) {
       <div className="bar" style={{ margin: "0 18px" }}><i style={{ width: `${(Math.min(step + 1, 4) / 4) * 100}%` }} /></div>
       <div className="screen"><div className="pad stack">
         {step === 0 && <>
-          <h1 style={{ fontSize: 28 }}>Wie ben je?</h1>
+          <h1 className="h-xl">Wie ben je?</h1>
           <label className="row" style={{ cursor: "pointer" }}><Avatar p={f} lg /><span className="btn sm"><Camera size={16} />{f.photo ? "Andere foto" : "Profielfoto"}</span>
             <input type="file" accept="image/*" className="sr" aria-label="Profielfoto" onChange={async (e) => e.target.files[0] && set("photo", await toDataUrl(e.target.files[0], 320))} /></label>
           <label className="f">Naam<input className="in" autoComplete="name" value={f.name} onChange={(e) => set("name", e.target.value)} /></label>
@@ -161,14 +173,14 @@ function Onboarding({ store, update }) {
           <label className="f">Woonplaats<select className="in" value={f.city} onChange={(e) => set("city", e.target.value)}>{Object.keys(CITIES).map((c) => <option key={c}>{c}</option>)}</select></label>
         </>}
         {step === 1 && <>
-          <h1 style={{ fontSize: 28 }}>Wat kun je?</h1>
+          <h1 className="h-xl">Wat kun je?</h1>
           <label className="f">Jaren werkervaring in je vak<input className="in" type="number" min="0" max="50" value={f.years} onChange={(e) => set("years", Math.max(0, +e.target.value))} /></label>
           <div className="f"><span>Tik je skills aan</span>
             <div className="row wrap">{SKILL_SUGGEST.map((x) => <button key={x} type="button" className={`chip ${f.skills.includes(x) ? "on" : ""}`} aria-pressed={f.skills.includes(x)} onClick={() => toggle("skills", x)}>{x}</button>)}</div></div>
           <div className="f"><span>Andere skill</span><SkillPicker value={f.skills.filter((x) => !SKILL_SUGGEST.includes(x))} onChange={(v) => set("skills", [...f.skills.filter((x) => SKILL_SUGGEST.includes(x)), ...v])} /></div>
         </>}
         {step === 2 && <>
-          <h1 style={{ fontSize: 28 }}>Certificaten</h1>
+          <h1 className="h-xl">Certificaten</h1>
           <p className="sm muted">Tik aan wat je hebt en vul de geldigheid in. Upload kan later; tot controle heet het “Uploaded”, niet “Verified”.</p>
           <div className="row wrap">{CERT_WORDS.map((x) => { const on = f.certs.some((c) => c.name === x); return (
             <button key={x} type="button" className={`chip ${on ? "on" : ""}`} aria-pressed={on} onClick={() => set("certs", on ? f.certs.filter((c) => c.name !== x) : [...f.certs, { id: uid(), name: x, issuer: "", number: "", validUntil: year, verified: false }])}>{x}</button>); })}</div>
@@ -176,7 +188,7 @@ function Onboarding({ store, update }) {
             <input className="in" style={{ width: "auto" }} type="date" aria-label={`${c.name} geldig tot`} value={c.validUntil} onChange={(e) => set("certs", f.certs.map((x) => (x.id === c.id ? { ...x, validUntil: e.target.value } : x)))} /></label>)}
         </>}
         {step === 3 && <>
-          <h1 style={{ fontSize: 28 }}>Wat zoek je?</h1>
+          <h1 className="h-xl">Wat zoek je?</h1>
           <div className="f"><span>Beschikbaar</span><div className="row wrap">{Object.entries(AVAIL_LABEL).filter(([k]) => k !== "date").map(([k, l]) => <button key={k} type="button" className={`chip ${f.availability === k ? "on" : ""}`} aria-pressed={f.availability === k} onClick={() => set("availability", k)}>{l}</button>)}</div></div>
           <div className="f"><span>Contractvorm</span><div className="row wrap">{Object.entries(CONTRACT).map(([k, l]) => <button key={k} type="button" className={`chip ${f.contracts.includes(k) ? "on" : ""}`} aria-pressed={f.contracts.includes(k)} onClick={() => toggle("contracts", k)}>{l}</button>)}</div></div>
           <label className="f">Minimum uurtarief (€)<input className="in" type="number" min="0" value={f.minRate} onChange={(e) => set("minRate", +e.target.value)} /></label>
@@ -184,7 +196,7 @@ function Onboarding({ store, update }) {
           <label className="f">Korte introductie<textarea className="in" style={{ minHeight: 80 }} placeholder="Wie ben je als vakman? Twee zinnen is genoeg." value={f.about} onChange={(e) => set("about", e.target.value)} /></label>
         </>}
         {step === 4 && <>
-          <h1 style={{ fontSize: 28 }}>Je Work Profile staat.</h1>
+          <h1 className="h-xl">Je Work Profile staat.</h1>
           <p className="muted">Laat nu zien wat je echt gedaan hebt. Eén project met een foto zegt meer dan “{f.years || 5} jaar ervaring”.</p>
           <button className="btn primary block" onClick={() => finish(true)}><Camera size={18} />Voeg je eerste project toe</button>
           <button className="btn ghost block" onClick={() => finish(false)}>Eerst vacatures bekijken</button>
@@ -200,53 +212,64 @@ function JobCard({ j, setJobId, save, dismiss, store }) {
   const saved = store.saved.includes(j.id);
   const wanted = findInterest(store, j.id, "me")?.co;
   return (
-    <article className="job" aria-label={`${j.title} bij ${c.name}`}>
+    <article className="jcard" aria-label={`${j.title} bij ${c.name}`}>
       <img src={j.photo} alt="" />
-      <div className="job-body">
-        <div className="row between">
-          <span className="sm" style={{ fontWeight: 600 }}>{c.name}{wanted && <span className="tag ai" style={{ marginLeft: 8 }}>Wil jou spreken</span>}</span>
-          <span className="match">{j.m.score}% match</span>
-        </div>
-        <h2>{j.title}</h2>
-        <div className="facts">
-          <span><MapPin size={16} />{j.city}</span>
-          <span><CurrencyEur size={16} />{rateText(j)}</span>
-          <span><Briefcase size={16} />{CONTRACT[j.contract]}</span>
-        </div>
-        <div className="job-actions">
-          <button className="icon-btn" aria-label="Niet interessant" onClick={() => dismiss(j)}><X size={20} /></button>
-          <button className="icon-btn" aria-label={saved ? "Niet meer bewaren" : "Bewaar"} aria-pressed={saved} onClick={() => save(j)}>
-            <Heart size={20} weight={saved ? "fill" : "regular"} />
-          </button>
-          <button className="btn primary" onClick={() => setJobId(j.id)}>Bekijk vacature</button>
-        </div>
+      <div className="jtop">
+        <button className="round-glass glass" aria-label="Niet interessant" onClick={() => dismiss(j)}><X size={18} /></button>
+        <span className="tag-glass glass">{wanted ? "Wil jou spreken" : c.name}</span>
+        <button className="round-glass glass" aria-label={saved ? "Niet meer bewaren" : "Bewaar"} aria-pressed={saved} onClick={() => save(j)}>
+          <Heart size={20} weight={saved ? "fill" : "regular"} />
+        </button>
+      </div>
+      <div className="jbody">
+        <span className="sm" style={{ opacity: 0.86 }}>{wanted ? c.name : `${j.city} · ${CONTRACT[j.contract]}`}</span>
+        <h3>{j.title}</h3>
+        <div className="jmeta"><span className="match">{j.m.score}% match</span><span><CurrencyEur size={14} />{rateText(j).replace("€", "")}</span>{wanted && <span><MapPin size={14} />{j.city}</span>}</div>
+        <button className="see glass" onClick={() => setJobId(j.id)}>Bekijk vacature<span className="arrow"><ArrowRight size={20} /></span></button>
       </div>
     </article>
   );
 }
 
 function Discover(ctx) {
+  const { p, jobs, store, update, setJobId, setPrefs } = ctx;
   const [f, setF] = useState("all");
-  const list = ctx.jobs.filter((j) => !ctx.store.dismissed.includes(j.id) && (f === "all" || j.contract === f)).sort((a, b) => b.m.score - a.m.score);
+  const [q, setQ] = useState("");
+  const list = jobs.filter((j) => !store.dismissed.includes(j.id) && (f === "all" || j.contract === f)
+    && `${j.title} ${companies[j.company].name} ${j.city} ${j.skills.join(" ")}`.toLowerCase().includes(q.trim().toLowerCase())).sort((a, b) => b.m.score - a.m.score);
+  const near = list.filter((j) => !j.m.gated).slice(0, 3);
   return (
-    <div style={{ position: "relative", height: "100%" }}>
-      <div className="feed-top">
-        <div className="filters" role="group" aria-label="Contractvorm">
-          {[["all", "Alles"], ["freelance", "Freelance"], ["project", "Project"], ["vast", "Vast"]].map(([id, l]) => (
-            <button key={id} className={`chip ${f === id ? "on" : ""}`} aria-pressed={f === id} onClick={() => setF(id)}>{l}</button>
-          ))}
+    <div className="pad stack" style={{ gap: 18 }}>
+      <header className="hello">
+        <div><h1 className="h-xl">Hallo, {(p.name || "daar").split(" ")[0]}</h1><p className="sm muted">Welkom terug bij workstr.</p></div>
+        <Avatar p={p} />
+      </header>
+      <label className="search"><MagnifyingGlass size={20} />
+        <input aria-label="Zoek vacatures" placeholder="Functie, bedrijf of plaats" value={q} onChange={(e) => setQ(e.target.value)} />
+        <button type="button" className="round-dark" aria-label="Voorkeuren" onClick={() => setPrefs(true)}><SlidersHorizontal size={20} /></button>
+      </label>
+      <h2 className="h-lg">Werk dat bij je past</h2>
+      <div className="pills" role="group" aria-label="Contractvorm">
+        {[["all", "Alles"], ["freelance", "Freelance"], ["project", "Project"], ["vast", "Vast"]].map(([id, l]) => (
+          <button key={id} className={`chip ${f === id ? "on" : ""}`} aria-pressed={f === id} onClick={() => setF(id)}>{l}</button>
+        ))}
+      </div>
+      {list.length ? <div className="deck">{list.map((j) => <JobCard key={j.id} j={j} {...ctx} />)}</div> : (
+        <div className="empty">
+          <h2 className="h-lg">Je bent bij.</h2>
+          <p className="muted">Geen eindeloze feed: Workstr laat alleen zien wat relevant is.</p>
+          <button className="btn" onClick={() => { setQ(""); update((s) => ({ ...s, dismissed: [] })); }}>Toon alles opnieuw</button>
         </div>
-      </div>
-      <div className="feed">
-        {list.map((j) => <JobCard key={j.id} j={j} {...ctx} />)}
-        {!list.length && (
-          <div className="empty">
-            <h2>Je bent bij.</h2>
-            <p className="muted">Geen eindeloze feed: Workstr laat alleen zien wat relevant is. Nieuwe kansen komen in je Weekly Opportunities.</p>
-            <button className="btn" onClick={() => ctx.update((s) => ({ ...s, dismissed: [] }))}>Toon overgeslagen vacatures</button>
-          </div>
-        )}
-      </div>
+      )}
+      {!!near.length && <>
+        <div className="row between"><h2 className="h-lg">Beste matches</h2><span className="sm muted">{near.length} voor jou</span></div>
+        <div className="stack" style={{ gap: 10 }}>{near.map((j) => (
+          <button key={j.id} className="mini" onClick={() => setJobId(j.id)}>
+            <img src={j.photo} alt="" />
+            <span><b>{j.title}</b><br /><span className="sm muted">{companies[j.company].name} · {j.city}</span></span>
+            <span className="match">{j.m.score}%</span>
+          </button>))}</div>
+      </>}
     </div>
   );
 }
@@ -258,48 +281,46 @@ function Back({ onClose, label = "Terug" }) {
 function JobDetail({ job: j, onClose, interest, save, store, setCompanyId, p, openChat }) {
   const c = companies[j.company];
   const i = findInterest(store, j.id, "me");
+  const [t, setT] = useState("why");
+  const saved = store.saved.includes(j.id);
+  const tabs = [["why", "Waarom jij"], ["work", "Het werk"], ["req", "Eisen"], ["team", "Team"]];
   return (
     <div className="overlay" role="dialog" aria-label={j.title}>
       <div className="screen">
-        <div className="hero"><img src={j.photo} alt={`Werkplek ${c.name}`} /><Back onClose={onClose} /></div>
-        <div className="pad stack" style={{ marginTop: -40, position: "relative" }}>
-          <button className="row" style={{ background: "none", border: 0, padding: 0 }} onClick={() => setCompanyId(j.company)}>
-            <span className="avatar" style={{ width: 32, height: 32, fontSize: 12 }}>{initials(c.name)}</span>
-            <span style={{ fontWeight: 600 }}>{c.name}</span><CaretRight size={14} className="muted" />
-          </button>
-          <div className="row between"><h1 style={{ fontSize: 28 }}>{j.title}</h1><span className="match">{j.m.score}%</span></div>
-          <div className="factgrid">
+        <div className="dhero"><img src={j.photo} alt={`Werkplek ${c.name}`} />
+          <button className="icon-btn" style={{ left: 16 }} aria-label="Terug" onClick={onClose}><ArrowLeft size={20} /></button>
+          <button className="icon-btn" style={{ right: 16 }} aria-label="Bewaar" aria-pressed={saved} onClick={() => save(j)}><Heart size={20} weight={saved ? "fill" : "regular"} /></button>
+        </div>
+        <div className="sheet">
+          <span className="handle" />
+          <div className="row between" style={{ alignItems: "flex-start" }}>
+            <div className="stack" style={{ gap: 8 }}>
+              <h1 className="h-xl">{j.title}</h1>
+              <button className="row linkbtn" style={{ fontWeight: 500 }} onClick={() => setCompanyId(j.company)}>
+                <span className="avatar" style={{ width: 28, height: 28, fontSize: 11 }}>{initials(c.name)}</span>{c.name}<CaretRight size={14} className="muted" /></button>
+            </div>
+            <div className="scorebox"><b>{j.m.score}%</b><small>match</small></div>
+          </div>
+          {i?.co && !i?.cand && <div className="ai-note"><Sparkle size={18} />{c.name} heeft jouw Work Profile bekeken en wil met je praten.</div>}
+          <div className="tiles">
             <div><span className="xs muted">Locatie</span><b>{j.city}</b></div>
             <div><span className="xs muted">{j.unit === "uur" ? "Tarief" : "Salaris"}</span><b>{rateText(j)}</b></div>
             <div><span className="xs muted">Contract</span><b>{CONTRACT[j.contract]}</b></div>
-            <div><span className="xs muted">Duur · start</span><b>{j.duration} · {fmtDate(j.start)}</b></div>
+            <div><span className="xs muted">Start · duur</span><b>{fmtDate(j.start)} · {j.duration}</b></div>
           </div>
-          {i?.co && !i?.cand && <div className="ai-note"><Sparkle size={18} />{c.name} heeft jouw Work Profile bekeken en wil met je praten.</div>}
-          <section className="card">
-            <h3 className="sec-title">Waarom dit bij jou past</h3>
-            <Reasons reasons={j.m.reasons} />
-          </section>
-          <section>
-            <h3 className="sec-title">Wat je gaat doen</h3>
-            <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 4 }}>{j.tasks.map((t) => <li key={t}>{t}</li>)}</ul>
-          </section>
-          <section>
-            <h3 className="sec-title">Certificaten</h3>
-            <div className="list">
-              {j.certs.map((name) => (
-                <div className="li" key={name}><Certificate size={20} /><span className="grow">{name}</span>
-                  <StatusBadge status={certStatus(p.certs.find((x) => x.name === name))} /></div>
-              ))}
-            </div>
-          </section>
-          <section><h3 className="sec-title">Team</h3><p>{j.team}</p></section>
-          <section><h3 className="sec-title">Skills</h3><div className="row wrap">{j.skills.map((s) => <span key={s} className="chip">{s}</span>)}</div></section>
+          <div className="seg" role="tablist">{tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={t === k} onClick={() => setT(k)}>{l}</button>)}</div>
+          {t === "why" && <section className="panel"><h3 className="h-lg" style={{ fontSize: 18 }}>Waarom dit bij jou past</h3><Reasons reasons={j.m.reasons} /></section>}
+          {t === "work" && <section className="panel"><h3 className="h-lg" style={{ fontSize: 18 }}>Wat je gaat doen</h3>
+            <ul className="reasons">{j.tasks.map((x) => <li key={x}><Check size={18} className="ok" />{x}</li>)}</ul>
+            <div className="row wrap">{j.skills.map((x) => <span key={x} className="chip">{x}</span>)}</div></section>}
+          {t === "req" && <section className="panel"><h3 className="h-lg" style={{ fontSize: 18 }}>Verplichte certificaten</h3>
+            <div className="list">{j.certs.map((name) => (
+              <div className="li" key={name}><Certificate size={20} /><span className="grow">{name}</span><StatusBadge status={certStatus(p.certs.find((x) => x.name === name))} /></div>))}</div></section>}
+          {t === "team" && <section className="panel"><h3 className="h-lg" style={{ fontSize: 18 }}>Team & werkplek</h3><p>{j.team}</p>
+            <ul className="reasons">{c.workplace.map((w) => <li key={w}><Buildings size={18} className="muted" />{w}</li>)}</ul></section>}
         </div>
       </div>
-      <div className="sticky-cta">
-        <button className="icon-btn" aria-label="Bewaar" aria-pressed={store.saved.includes(j.id)} onClick={() => save(j)}>
-          <Heart size={20} weight={store.saved.includes(j.id) ? "fill" : "regular"} />
-        </button>
+      <div className="floating-cta">
         {isMatch(i) ? <button className="btn primary grow" onClick={() => { onClose(); openChat(i.id); }}><ChatCircle size={18} />Open gesprek</button>
           : i?.cand ? <button className="btn grow" disabled>Wacht op {c.name}</button>
           : <button className="btn primary grow" onClick={() => interest(j)}>{i?.co ? `${c.name} wil jou spreken — Accepteer` : "Interesse tonen"}</button>}
@@ -356,7 +377,7 @@ function Matches({ jobs, store, update, mine, setJobId, openChat }) {
   );
   return (
     <div className="pad stack">
-      <h1 style={{ fontSize: 28 }}>Matches</h1>
+      <h1 className="h-xl">Matches</h1>
       {!!wanted.length && <section className="card stack" style={{ borderColor: "var(--primary)" }}>
         <h3 className="sec-title" style={{ color: "var(--lav)" }}>Bedrijven die jou willen spreken</h3>
         {wanted.map((i) => { const j = job(i.job); return (
@@ -370,7 +391,7 @@ function Matches({ jobs, store, update, mine, setJobId, openChat }) {
         <div className="list">{matched.map((i) => <Row key={i.id} j={job(i.job)} onClick={() => openChat(i.id)} right={<span className="chip on">Chat{i.unreadCand ? ` · ${i.unreadCand}` : ""}</span>} />)}</div></section>}
       <section className="card stack" style={{ background: "var(--elev)" }}>
         <div><p className="sec-title" style={{ color: "var(--lav)" }}>Your Weekly Opportunities</p>
-          <h2>{weekly.length} kansen die echt passen</h2>
+          <h2 className="h-lg">{weekly.length} {weekly.length === 1 ? "kans die echt past" : "kansen die echt passen"}</h2>
           <p className="sm muted">Elke maandag een selectie. Alleen vacatures waar je aan alle harde eisen voldoet.</p></div>
         {weekly.map((j) => (
           <button key={j.id} className="card" style={{ textAlign: "left", display: "grid", gap: 8, background: "var(--surface)" }} onClick={() => setJobId(j.id)}>
@@ -395,7 +416,7 @@ function CreateHub({ setCreate }) {
     ["skill", "Skill", "", Wrench], ["photo", "Foto toevoegen", "", ImageSquare]];
   return (
     <div className="pad stack">
-      <h1 style={{ fontSize: 28 }}>Create</h1>
+      <h1 className="h-xl">Create</h1>
       <p className="muted">Laat zien wat je hebt gedaan. Je Work Profile groeit mee met elk project.</p>
       <div className="create-grid">
         {items.map(([k, title, sub, Icon, wide]) => (
@@ -504,7 +525,7 @@ function Inbox({ mine, byId, openChat, store }) {
   const matched = mine.filter(isMatch);
   return (
     <div className="pad stack">
-      <h1 style={{ fontSize: 28 }}>Inbox</h1>
+      <h1 className="h-xl">Inbox</h1>
       <div className="list">
         {matched.map((i) => { const j = byId(i.job), c = companies[j.company]; return (
           <button key={i.id} className="li" onClick={() => openChat(i.id)}>
