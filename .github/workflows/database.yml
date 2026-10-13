@@ -1,7 +1,7 @@
 # Applies every new SQL file in supabase/migrations to the Supabase project, then
 # runs the tenant-isolation test. Secrets live in GitHub, never in the repo.
 #   secrets: SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD
-#   variables: SUPABASE_PROJECT_REF, SUPABASE_ANON_KEY (public by design)
+#   + SUPABASE_PROJECT_REF, SUPABASE_ANON_KEY (public by design, stored as secrets too)
 name: Database
 
 on:
@@ -23,7 +23,7 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+      - run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
       - run: supabase db push
       - uses: actions/setup-node@v4
         with:
@@ -33,5 +33,5 @@ jobs:
       - name: Tenant isolation test
         run: node supabase/tests/isolation.mjs
         env:
-          SUPABASE_URL: https://${{ vars.SUPABASE_PROJECT_REF }}.supabase.co
-          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
