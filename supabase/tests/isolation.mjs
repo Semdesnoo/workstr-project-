@@ -1,6 +1,6 @@
 // Tenant-isolation check against the real Supabase project.
 // Run: SUPABASE_URL=... SUPABASE_ANON_KEY=... node supabase/tests/isolation.mjs
-// Needs: migration 0001 applied, Auth → "Confirm email" OFF. Creates two throwaway test users.
+// Needs: migration applied (GitHub Action "Database"), Auth → "Confirm email" OFF. Creates two throwaway test users.
 import { createClient } from "@supabase/supabase-js";
 import assert from "node:assert/strict";
 
