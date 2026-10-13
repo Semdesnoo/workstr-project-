@@ -9,7 +9,7 @@ if (!url || !key) throw new Error("Set SUPABASE_URL and SUPABASE_ANON_KEY");
 
 async function tenant(label) {
   const db = createClient(url, key, { auth: { persistSession: false } });
-  const email = `isolation-${label}-${Date.now()}@example.com`;
+  const email = `isolation-${label}-${Date.now()}@workstr-isolation.nl`;
   const { error: e1 } = await db.auth.signUp({ email, password: crypto.randomUUID() });
   if (e1) throw e1;
   const { data: company, error: e2 } = await db.rpc("create_company", { p_name: `Test ${label}` });
