@@ -68,18 +68,28 @@ function CloudBusiness({ company, initial, onSignOut }) {
   const [store, setStore] = useState(initial);
   const [status, setStatus] = useState("saved");
   const saved = useRef(initial);
+  const latest = useRef(initial);
   const chain = useRef(Promise.resolve());
   useEffect(() => {
     const target = store;
+    latest.current = target;
     if (saved.current === target) return;
     setStatus("saving");
     chain.current = chain.current.then(async () => {
       if (saved.current === target) return;
       await sync(saved.current, target, company.id);
       saved.current = target;
-      setStatus((s) => (s === "saving" ? "saved" : s));
+      // "saved" only when nothing newer is still waiting in the chain
+      if (saved.current === latest.current) setStatus("saved");
     }).catch((e) => setStatus(`error:${e.message}`));
   }, [store, company.id]);
+  // Don't let the user close the tab while changes are still being written.
+  useEffect(() => {
+    if (status === "saved") return;
+    const warn = (e) => { e.preventDefault(); e.returnValue = ""; };
+    addEventListener("beforeunload", warn);
+    return () => removeEventListener("beforeunload", warn);
+  }, [status]);
   return <Business store={store} update={setStore} company={company} status={status} onSignOut={onSignOut} />;
 }
 

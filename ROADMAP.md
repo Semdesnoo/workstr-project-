@@ -10,9 +10,11 @@ Principe: eerst bouwen en bewijzen met testdata. KvK, Meta-verificatie en betale
 | Onderdeel | Status |
 |---|---|
 | Website (`index.html`) | Live op GitHub Pages. Etalage, af voor nu. |
-| App / Business / Managed (`app.html`) | Klikbare demo; data in de browser (localStorage). |
+| Business (`app.html#/business`) | **Live op Supabase**: registreren, bedrijf aanmaken, alles wordt automatisch opgeslagen. |
+| App / Managed | Nog klikbare demo (localStorage). |
 | Logica: `logic.js`, `engine.js`, `agents.js` | Echte, geteste code (14 tests). Gaat mee naar de backend. |
-| Database, login, server, kanalen, AI | Nog niet gebouwd. Dat is de volgende stap. |
+| Database + login + afscherming per bedrijf | Live. Migraties en tests draaien automatisch via GitHub Actions. |
+| Server-worker, echte kanalen, echte AI | Nog niet gebouwd (Fase 3–4). |
 
 ## Fases
 
