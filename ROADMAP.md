@@ -10,8 +10,8 @@ Alles wat die loop niet sneller of beter maakt, wacht. Bouwen en testen gebeurt 
 |---|---|
 | Website | Live (GitHub Pages). Af voor nu. |
 | Database + login + afscherming per bedrijf | Live op Supabase. Migraties en tests via GitHub Actions. |
-| Business ATS + 8 agents (`#/business`) | Werkt op Supabase, maar is **meer dan V1 nodig heeft**. Geparkeerd; code blijft staan. |
-| Candidate App: Work Profile, Discover, Matches, Chat, CV (`#/app`) | Klikbare demo in localStorage. **Hier ligt de focus.** |
+| Volledige ATS + 8 agents (`#/ats`) | Werkt op Supabase, maar is meer dan V1 nodig heeft. **Geparkeerd**; bereikbaar via `#/ats`, niet in het menu. |
+| **Prototype week 1–2** (`app.html`) | Klikbaar, localStorage. **App** (`#/app`, PWA, mobiel + desktop): profiel in 4 stappen → Add Project → Discover → interesse → It's a match → chat, CV. **Business** (`#/business`, desktop): vacature plaatsen → matches → profiel → interesse → chat. Beide kanten delen dezelfde loop (`loop.js`). |
 | Managed (MSP) | Demo. Geparkeerd. |
 
 ## Besluiten

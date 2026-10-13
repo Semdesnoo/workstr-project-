@@ -2,7 +2,7 @@
   "name": "Workstr",
   "short_name": "Workstr",
   "description": "Less searching. More working.",
-  "start_url": "./app.html",
+  "start_url": "./app.html#/app",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

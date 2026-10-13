@@ -30,6 +30,8 @@ export const me = {
   radiusKm: 80,
   minRate: 50,
   contracts: ["freelance", "project"],
+  discoverable: true,
+  photo: "",
   certs: [
     { id: "c1", name: "UT2", number: "EN9712-UT2-44871", issuer: "Lloyd's Register", validUntil: d(540), verified: true },
     { id: "c2", name: "VCA", number: "VCA-2291034", issuer: "SSVV", validUntil: d(410), verified: true },
