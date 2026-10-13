@@ -68,7 +68,7 @@ export default function Biz({ store, update }) {
 }
 
 const Kpi = ({ label, value }) => <div className="kpi"><span className="sm muted">{label}</span><b>{value}</b></div>;
-const Status = ({ i }) => (isMatch(i) ? <span className="tag human">Match</span> : i?.cand ? <span className="tag ai">Interesse ontvangen</span> : i?.co ? <span className="tag">Benaderd</span> : null);
+const Status = ({ i }) => (isMatch(i) ? <span className="tag human">Match</span> : i?.cand ? <span className="tag ai">Sollicitatie ontvangen</span> : i?.co ? <span className="tag">Benaderd</span> : null);
 
 function Dashboard({ co, jobs, ranked, incoming, matches, unread, who, store, setPerson, setJob }) {
   const fresh = jobs.reduce((n, j) => n + ranked(j).filter(({ m, x }) => m.score >= 70 && !findInterest(store, j.id, x.id)).length, 0);
@@ -76,7 +76,7 @@ function Dashboard({ co, jobs, ranked, incoming, matches, unread, who, store, se
     <header><div><h1>Goedemorgen, {companies[co].name}</h1><p className="muted">Wie past, wie wil jou spreken, en met wie praat je al.</p></div></header>
     <div className="kpis"><Kpi label="Open vacatures" value={jobs.length} /><Kpi label="Nieuwe matches" value={fresh} /><Kpi label="Nieuwe berichten" value={unread} /><Kpi label="Lopende gesprekken" value={matches.length} /></div>
     <div className="cols even">
-      <section className="card stack"><h3 className="sec-title">Interesse ontvangen</h3>
+      <section className="card stack"><h3 className="sec-title">Sollicitaties ontvangen</h3>
         {incoming.map((i) => { const x = who(i.person), j = jobs.find((v) => v.id === i.job); return (
           <button key={i.id} className="li" onClick={() => setPerson({ id: x.id, job: j.id })}><PersonAvatar x={x} /><span className="grow"><b>{x.name}</b><br /><span className="xs muted">{x.headline} · {j.title}</span></span><span className="match">{matchJob(x, j).score}%</span></button>); })}
         {!incoming.length && <p className="sm muted">Nog niemand. Professionals die interesse tonen verschijnen hier.</p>}</section>
@@ -178,6 +178,7 @@ function ProfileView({ x, job, store, interest, openChat, onBack }) {
         <h3 className="sec-title">Waarom deze match</h3>
         <Reasons reasons={m.reasons.map(forEmployer)} />
         <Status i={i} />
+        {i?.note && <div className="ai-note" style={{ color: "var(--text)" }}><ChatCircle size={18} />“{i.note}”</div>}
         {isMatch(i) ? <button className="btn primary block" onClick={() => openChat(i.id)}><ChatCircle size={16} />Open chat</button>
           : i?.co ? <p className="sm muted">Interesse getoond. Je kunt chatten zodra {x.name.split(" ")[0]} ook interesse heeft.</p>
           : <button className="btn primary block" onClick={() => interest(job.id, x.id)}><Check size={16} />{i?.cand ? "Accepteer en start chat" : "Interesse tonen"}</button>}

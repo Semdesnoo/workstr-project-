@@ -149,34 +149,45 @@ button.chip.on { background: var(--text); color: var(--bg); border-color: var(--
 .tabs button[aria-current="page"] .lbl { display: inline; }
 .tabs .dot { position: absolute; top: 9px; right: 11px; width: 8px; height: 8px; border-radius: 9px; background: #7c78ff; }
 
-/* Discover */
-.hello { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.search { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 999px; padding: 6px 6px 6px 18px; box-shadow: var(--shadow); color: var(--muted); }
-.search input { flex: 1; border: 0; outline: 0; background: none; font-size: 15px; color: var(--text); padding: 10px 0; min-width: 0; }
-.search .round-dark { width: 46px; height: 46px; border-radius: 999px; background: var(--text); color: #fff; display: grid; place-items: center; border: 0; flex: none; }
-.pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 4px 18px; }
-.pills::-webkit-scrollbar { display: none; }
-.pills .chip { flex: none; padding: 11px 18px; font-size: 14px; }
-.deck { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -18px; padding: 6px 18px 12px; }
-.deck::-webkit-scrollbar { display: none; }
-.jcard { position: relative; flex: none; width: min(84%, 380px); height: min(500px, 62vh); min-height: 400px; border-radius: 32px; overflow: hidden;
-  scroll-snap-align: center; color: #fff; box-shadow: 0 18px 40px rgba(17, 18, 22, .18); background: #222; }
-.jcard > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.jcard::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.28) 0%, transparent 26%, transparent 46%, rgba(0,0,0,.78) 100%); }
-.jcard > * { position: relative; z-index: 1; }
-.jcard .jtop { position: absolute; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; }
 .glass { background: rgba(255, 255, 255, .2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, .28); color: #fff; }
-.round-glass { width: 44px; height: 44px; border-radius: 999px; display: grid; place-items: center; }
-.jcard .jbody { position: absolute; left: 16px; right: 16px; bottom: 16px; display: grid; gap: 10px; }
-.jcard h3 { font-size: 28px; letter-spacing: -0.03em; line-height: 1.05; }
-.jcard .jmeta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: rgba(255,255,255,.86); align-items: center; }
-.jcard .jmeta span { display: inline-flex; gap: 4px; align-items: center; }
-.see { display: flex; align-items: center; justify-content: space-between; border-radius: 999px; padding: 6px 6px 6px 22px; font-weight: 600; font-size: 15px; }
-.see .arrow { width: 48px; height: 48px; border-radius: 999px; background: #fff; color: #111216; display: grid; place-items: center; }
-.tag-glass { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; }
-.mini { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; background: #fff; border-radius: 22px; padding: 10px; box-shadow: var(--shadow); text-align: left; border: 0; width: 100%; color: inherit; }
-.mini img { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; }
+.round-glass { width: 44px; height: 44px; border-radius: 999px; display: grid; place-items: center; flex: none; }
 .empty { display: grid; place-content: center; text-align: center; gap: 12px; padding: 48px 24px; background: #fff; border-radius: 32px; box-shadow: var(--shadow); }
+
+/* Discover: TikTok-style vertical feed with white info bar */
+.screen.full { padding: 0 !important; overflow: hidden; }
+.ttwrap { position: relative; height: 100%; }
+.tt { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; }
+.tt::-webkit-scrollbar { display: none; }
+.ttitem { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; background: #111216; }
+.ttitem > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ttitem::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,.5) 0%, transparent 20%, transparent 50%, rgba(0,0,0,.5) 100%); }
+.ttempty { display: grid; place-items: center; padding: 24px; background: var(--bg); }
+.ttempty::after { display: none; }
+.tttop { position: absolute; z-index: 6; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 12px; display: flex; gap: 8px; align-items: center; }
+.tpills { display: flex; gap: 6px; flex: 1; mask-image: linear-gradient(90deg, #000 85%, transparent); overflow-x: auto; scrollbar-width: none; }
+.tpills::-webkit-scrollbar { display: none; }
+.tttop .chip { flex: none; padding: 8px 13px; background: rgba(17,18,22,.62); color: #fff; box-shadow: none; border: 1px solid rgba(255,255,255,.24); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.tttop button.chip.on { background: #fff; color: #111216; }
+.rail { position: absolute; z-index: 3; right: 12px; bottom: calc(282px + env(safe-area-inset-bottom)); display: grid; gap: 16px; justify-items: center; }
+.rail button { display: grid; justify-items: center; gap: 4px; background: none; border: 0; padding: 0; color: #fff; font-size: 11px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+.rail .rb { width: 50px; height: 50px; border-radius: 999px; display: grid; place-items: center; }
+.rail .rb.co { font-size: 14px; font-weight: 700; background: #fff; color: #111216; border: 0; }
+.infobar { position: absolute; z-index: 3; left: 12px; right: 12px; bottom: calc(92px + env(safe-area-inset-bottom)); display: grid; gap: 6px; text-align: left;
+  background: #fff; color: #111216; border: 0; border-radius: 28px; padding: 14px 16px 12px; box-shadow: 0 18px 40px rgba(0,0,0,.28); }
+.infobar .ib-title { font-size: 21px; letter-spacing: -0.03em; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ib-more { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--border); padding-top: 9px; margin-top: 2px; }
+.mediastrip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 0 18px; }
+.mediastrip img { flex: none; width: 150px; height: 110px; object-fit: cover; border-radius: 16px; }
+.sheet-backdrop { position: absolute; inset: 0; z-index: 25; background: rgba(17, 18, 22, .45); display: flex; align-items: flex-end; }
+.applysheet { width: 100%; max-height: 92%; overflow-y: auto; background: #fff; border-radius: 32px 32px 0 0; padding: 12px 20px calc(24px + env(safe-area-inset-bottom)); display: grid; gap: 12px; }
+.applysheet .handle { justify-self: center; width: 44px; height: 5px; border-radius: 9px; background: #cfd2d8; }
+/* inside the desktop iPhone frame the feed runs under the status bar, TikTok-style */
+.iphone:has(.tt):not(:has(.overlay)) .app, .iphone:has(.match-modal) .app { top: 0; }
+.iphone:has(.tt):not(:has(.overlay)) .statusbar { color: #fff; }
+.iphone .tttop { top: 56px; }
+.iphone .infobar { bottom: 100px; }
+.iphone .rail { bottom: 290px; }
+.iphone .applysheet { padding-bottom: 34px; }
 
 /* Job detail: photo + white sheet */
 .appwide .overlay { background: var(--bg); }

@@ -33,11 +33,16 @@ test("de loop: profiel in 4 stappen → project → interesse → bedrijf accept
   await page.getByRole("button", { name: "Goedkeuren en toevoegen" }).click();
 
   const card = page.getByRole("article", { name: "NDT Inspector bij Van Oord" });
-  await card.getByRole("button", { name: "Bekijk vacature" }).click();
+  await card.getByRole("button", { name: /Bekijk vacature/ }).click();
   await expect(page.getByText("Waarom dit bij jou past")).toBeVisible();
+  await page.getByRole("tab", { name: "Bedrijf" }).click();
+  await expect(page.getByText(/Marine contractor/)).toBeVisible();
   await page.screenshot({ path: "test-results/proto-detail.png" });
-  await page.getByRole("button", { name: "Interesse tonen" }).click();
-  await expect(page.getByRole("status")).toContainText("Van Oord ziet nu je Work Profile");
+  await page.getByRole("button", { name: "Solliciteer" }).click();
+  const sheet = page.getByRole("dialog", { name: "Solliciteren" });
+  await sheet.getByLabel("Bericht (optioneel)").fill("Ik kan per direct starten.");
+  await sheet.getByRole("button", { name: "Verstuur sollicitatie" }).click();
+  await expect(page.getByRole("status")).toContainText("Sollicitatie verstuurd — Van Oord ziet nu je Work Profile");
 
   // Business side (same browser, shared prototype store)
   await page.getByRole("link", { name: "Business" }).click();
@@ -45,6 +50,7 @@ test("de loop: profiel in 4 stappen → project → interesse → bedrijf accept
   await page.screenshot({ path: "test-results/proto-biz-dashboard.png" });
   await page.getByRole("button", { name: /Daan Visser/ }).first().click();
   await expect(page.getByText("Offshore Jacket Inspection")).toBeVisible();
+  await expect(page.getByText("“Ik kan per direct starten.”")).toBeVisible();
   await page.screenshot({ path: "test-results/proto-biz-profile.png" });
   await page.getByRole("button", { name: "Accepteer en start chat" }).click();
   await page.getByRole("button", { name: "Open chat" }).click();
@@ -105,6 +111,7 @@ test("bedrijf wil jou spreken: accepteren vanuit Matches + harde poort zichtbaar
   await page.getByRole("button", { name: /^Discover/ }).click();
   const welding = page.getByRole("article", { name: /Welding Inspector/ });
   await expect(welding.getByText("59% match")).toBeAttached();
+  await expect(welding.getByText(/CSWIP 3.1 ontbreekt/)).toBeAttached();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
 });
 

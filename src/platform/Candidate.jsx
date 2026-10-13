@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Sparkle, Plus, ChatCircle, User, MapPin, Briefcase, CurrencyEur, X, Check,
   Warning, ArrowLeft, PaperPlaneRight, Camera, Certificate, GraduationCap, Wrench, FilePdf, Lightning, CaretRight,
-  Buildings, ImageSquare, SlidersHorizontal, Heart, Eye, EyeSlash, MagnifyingGlass, ArrowRight, House,
+  Buildings, ImageSquare, SlidersHorizontal, Heart, Eye, EyeSlash, ArrowRight, House, CaretUp, PaperPlaneTilt,
 } from "@phosphor-icons/react";
 import { showInterest, sendMessage, markRead, decline, isMatch, findInterest } from "./loop.js";
 import { companies, seedJobs, CITIES } from "./data.js";
@@ -48,10 +48,13 @@ export default function Candidate({ store, update }) {
   const unread = mine.reduce((n, i) => n + (i.unreadCand || 0), 0) + mine.filter((i) => i.co && !i.cand && i.declined !== "cand").length;
   const fresh = mine.find((i) => isMatch(i) && !i.seenCand);
 
-  const interest = (j) => {
+  const interest = (j, note = "") => {
     const wasWanted = findInterest(store, j.id, "me")?.co;
-    update((s) => showInterest(s, j.id, "me", "cand"));
-    if (!wasWanted) setToast(`Interesse verstuurd — ${companies[j.company].name} ziet nu je Work Profile`);
+    update((s) => {
+      const t = showInterest(s, j.id, "me", "cand");
+      return note.trim() ? { ...t, interests: t.interests.map((i) => (i.job === j.id && i.person === "me" ? { ...i, note: note.trim() } : i)) } : t;
+    });
+    if (!wasWanted) setToast(`Sollicitatie verstuurd — ${companies[j.company].name} ziet nu je Work Profile`);
     setJobId(null);
   };
   const save = (j) => { update((s) => ({ ...s, saved: s.saved.includes(j.id) ? s.saved.filter((x) => x !== j.id) : [...s.saved, j.id] })); };
@@ -68,7 +71,7 @@ export default function Candidate({ store, update }) {
   const ctx = { store, update, p, jobs, byId, mine, setJobId, setCompanyId, setChatId, openChat, setCreate, interest, save, dismiss, setToast, setCv, setPrefs, setTab };
   return (
     <div className="app">
-      <div className="screen">
+      <div className={`screen ${tab === "discover" ? "full" : ""}`}>
         {tab === "discover" && <Discover {...ctx} />}
         {tab === "matches" && <Matches {...ctx} />}
         {tab === "create" && <CreateHub {...ctx} />}
@@ -207,69 +210,62 @@ function Onboarding({ store, update }) {
   );
 }
 
-function JobCard({ j, setJobId, save, dismiss, store }) {
+function FeedItem({ j, setJobId, setCompanyId, save, dismiss, store }) {
   const c = companies[j.company];
   const saved = store.saved.includes(j.id);
   const wanted = findInterest(store, j.id, "me")?.co;
+  const why = j.m.gated ? j.m.reasons.find((r) => r.type === "no") : null;
+  const pros = j.m.reasons.filter((r) => r.type === "ok").slice(0, 2);
   return (
-    <article className="jcard" aria-label={`${j.title} bij ${c.name}`}>
+    <article className="ttitem" aria-label={`${j.title} bij ${c.name}`}>
       <img src={j.photo} alt="" />
-      <div className="jtop">
-        <button className="round-glass glass" aria-label="Niet interessant" onClick={() => dismiss(j)}><X size={18} /></button>
-        <span className="tag-glass glass">{wanted ? "Wil jou spreken" : c.name}</span>
-        <button className="round-glass glass" aria-label={saved ? "Niet meer bewaren" : "Bewaar"} aria-pressed={saved} onClick={() => save(j)}>
-          <Heart size={20} weight={saved ? "fill" : "regular"} />
-        </button>
+      <div className="rail">
+        <button aria-label={`Bedrijf ${c.name}`} onClick={() => setCompanyId(j.company)}><span className="rb glass co">{initials(c.name)}</span>Bedrijf</button>
+        <button aria-label={saved ? "Niet meer bewaren" : "Bewaar"} aria-pressed={saved} onClick={() => save(j)}><span className="rb glass"><Heart size={24} weight={saved ? "fill" : "regular"} /></span>{saved ? "Bewaard" : "Bewaar"}</button>
+        <button aria-label="Niet interessant" onClick={() => dismiss(j)}><span className="rb glass"><X size={22} /></span>Skip</button>
       </div>
-      <div className="jbody">
-        <span className="sm" style={{ opacity: 0.86 }}>{wanted ? c.name : `${j.city} · ${CONTRACT[j.contract]}`}</span>
-        <h3>{j.title}</h3>
-        <div className="jmeta"><span className="match">{j.m.score}% match</span><span><CurrencyEur size={14} />{rateText(j).replace("€", "")}</span>{wanted && <span><MapPin size={14} />{j.city}</span>}</div>
-        <button className="see glass" onClick={() => setJobId(j.id)}>Bekijk vacature<span className="arrow"><ArrowRight size={20} /></span></button>
-      </div>
+      <button className="infobar" aria-label={`Bekijk vacature: ${j.title}`} onClick={() => setJobId(j.id)}>
+        <span className="row between">
+          <span className="row" style={{ gap: 8 }}><span className="avatar" style={{ width: 30, height: 30, fontSize: 11 }}>{initials(c.name)}</span><b className="sm">{c.name}</b><span className="xs muted">· {j.city}</span></span>
+          <span className="match" style={j.m.gated ? { background: "var(--elev)", color: "var(--text)" } : undefined}>{j.m.score}% match</span>
+        </span>
+        <b className="ib-title">{j.title}</b>
+        <span className="sm muted">{rateText(j)} · {CONTRACT[j.contract]} · start {fmtDate(j.start)}</span>
+        {wanted ? <span className="sm" style={{ color: "var(--lav)", fontWeight: 600 }}>{c.name} wil jou spreken</span>
+          : why ? <span className="sm" style={{ color: "var(--err)" }}>✕ {why.text.replace(" — verplicht voor deze functie", "")}</span>
+          : <span className="sm" style={{ color: "var(--ok)" }}>✓ {pros.map((r) => r.text).join(" · ")}</span>}
+        <span className="ib-more"><CaretUp size={14} weight="bold" />Tik voor bedrijf & solliciteren</span>
+      </button>
     </article>
   );
 }
 
 function Discover(ctx) {
-  const { p, jobs, store, update, setJobId, setPrefs } = ctx;
+  const { jobs, store, update, setPrefs } = ctx;
   const [f, setF] = useState("all");
-  const [q, setQ] = useState("");
-  const list = jobs.filter((j) => !store.dismissed.includes(j.id) && (f === "all" || j.contract === f)
-    && `${j.title} ${companies[j.company].name} ${j.city} ${j.skills.join(" ")}`.toLowerCase().includes(q.trim().toLowerCase())).sort((a, b) => b.m.score - a.m.score);
-  const near = list.filter((j) => !j.m.gated).slice(0, 3);
+  const list = jobs.filter((j) => !store.dismissed.includes(j.id) && (f === "all" || j.contract === f)).sort((a, b) => b.m.score - a.m.score);
   return (
-    <div className="pad stack" style={{ gap: 18 }}>
-      <header className="hello">
-        <div><h1 className="h-xl">Hallo, {(p.name || "daar").split(" ")[0]}</h1><p className="sm muted">Welkom terug bij workstr.</p></div>
-        <Avatar p={p} />
-      </header>
-      <label className="search"><MagnifyingGlass size={20} />
-        <input aria-label="Zoek vacatures" placeholder="Functie, bedrijf of plaats" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button type="button" className="round-dark" aria-label="Voorkeuren" onClick={() => setPrefs(true)}><SlidersHorizontal size={20} /></button>
-      </label>
-      <h2 className="h-lg">Werk dat bij je past</h2>
-      <div className="pills" role="group" aria-label="Contractvorm">
-        {[["all", "Alles"], ["freelance", "Freelance"], ["project", "Project"], ["vast", "Vast"]].map(([id, l]) => (
-          <button key={id} className={`chip ${f === id ? "on" : ""}`} aria-pressed={f === id} onClick={() => setF(id)}>{l}</button>
-        ))}
-      </div>
-      {list.length ? <div className="deck">{list.map((j) => <JobCard key={j.id} j={j} {...ctx} />)}</div> : (
-        <div className="empty">
-          <h2 className="h-lg">Je bent bij.</h2>
-          <p className="muted">Geen eindeloze feed: Workstr laat alleen zien wat relevant is.</p>
-          <button className="btn" onClick={() => { setQ(""); update((s) => ({ ...s, dismissed: [] })); }}>Toon alles opnieuw</button>
+    <div className="ttwrap">
+      <div className="tttop">
+        <div className="tpills" role="group" aria-label="Contractvorm">
+          {[["all", "Voor jou"], ["freelance", "Freelance"], ["project", "Project"], ["vast", "Vast"]].map(([id, l]) => (
+            <button key={id} className={`chip ${f === id ? "on" : ""}`} aria-pressed={f === id} onClick={() => setF(id)}>{l}</button>
+          ))}
         </div>
-      )}
-      {!!near.length && <>
-        <div className="row between"><h2 className="h-lg">Beste matches</h2><span className="sm muted">{near.length} voor jou</span></div>
-        <div className="stack" style={{ gap: 10 }}>{near.map((j) => (
-          <button key={j.id} className="mini" onClick={() => setJobId(j.id)}>
-            <img src={j.photo} alt="" />
-            <span><b>{j.title}</b><br /><span className="sm muted">{companies[j.company].name} · {j.city}</span></span>
-            <span className="match">{j.m.score}%</span>
-          </button>))}</div>
-      </>}
+        <button className="round-glass glass" aria-label="Voorkeuren" onClick={() => setPrefs(true)}><SlidersHorizontal size={20} /></button>
+      </div>
+      <div className="tt">
+        {list.map((j) => <FeedItem key={j.id} j={j} {...ctx} />)}
+        {!list.length && (
+          <div className="ttitem ttempty">
+            <div className="empty">
+              <h2 className="h-lg">Je bent bij.</h2>
+              <p className="muted">Geen eindeloze feed: Workstr laat alleen zien wat relevant is.</p>
+              <button className="btn primary" onClick={() => { setF("all"); update((s) => ({ ...s, dismissed: [] })); }}>Toon alles opnieuw</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -282,8 +278,10 @@ function JobDetail({ job: j, onClose, interest, save, store, setCompanyId, p, op
   const c = companies[j.company];
   const i = findInterest(store, j.id, "me");
   const [t, setT] = useState("why");
+  const [apply, setApply] = useState(false);
+  const [note, setNote] = useState("");
   const saved = store.saved.includes(j.id);
-  const tabs = [["why", "Waarom jij"], ["work", "Het werk"], ["req", "Eisen"], ["team", "Team"]];
+  const tabs = [["why", "Waarom jij"], ["co", "Bedrijf"], ["work", "Het werk"], ["req", "Eisen"]];
   return (
     <div className="overlay" role="dialog" aria-label={j.title}>
       <div className="screen">
@@ -316,15 +314,37 @@ function JobDetail({ job: j, onClose, interest, save, store, setCompanyId, p, op
           {t === "req" && <section className="panel"><h3 className="h-lg" style={{ fontSize: 18 }}>Verplichte certificaten</h3>
             <div className="list">{j.certs.map((name) => (
               <div className="li" key={name}><Certificate size={20} /><span className="grow">{name}</span><StatusBadge status={certStatus(p.certs.find((x) => x.name === name))} /></div>))}</div></section>}
-          {t === "team" && <section className="panel"><h3 className="h-lg" style={{ fontSize: 18 }}>Team & werkplek</h3><p>{j.team}</p>
-            <ul className="reasons">{c.workplace.map((w) => <li key={w}><Buildings size={18} className="muted" />{w}</li>)}</ul></section>}
+          {t === "co" && <section className="panel">
+            <div className="row"><span className="avatar" style={{ width: 52, height: 52, fontSize: 16 }}>{initials(c.name)}</span>
+              <span className="grow"><b>{c.name}</b><br /><span className="sm muted">{c.industry} · {c.city}</span></span></div>
+            <p>{c.about}</p>
+            <div className="mediastrip">{c.media.map((m) => <img key={m} src={m} alt={`Werkplek ${c.name}`} />)}</div>
+            <ul className="reasons">{[j.team, ...c.workplace].filter(Boolean).map((w) => <li key={w}><Buildings size={18} className="muted" />{w}</li>)}</ul>
+            <div className="row wrap">{c.people.map((x) => <span key={x.n} className="chip">{x.n} · {x.r}</span>)}</div>
+            <button className="btn" onClick={() => setCompanyId(j.company)}>Volledig bedrijfsprofiel <ArrowRight size={16} /></button>
+          </section>}
         </div>
       </div>
       <div className="floating-cta">
         {isMatch(i) ? <button className="btn primary grow" onClick={() => { onClose(); openChat(i.id); }}><ChatCircle size={18} />Open gesprek</button>
-          : i?.cand ? <button className="btn grow" disabled>Wacht op {c.name}</button>
-          : <button className="btn primary grow" onClick={() => interest(j)}>{i?.co ? `${c.name} wil jou spreken — Accepteer` : "Interesse tonen"}</button>}
+          : i?.cand ? <button className="btn grow" disabled>Sollicitatie verstuurd · wacht op {c.name}</button>
+          : i?.co ? <button className="btn primary grow" onClick={() => interest(j)}>{c.name} wil jou spreken — Accepteer</button>
+          : <button className="btn primary grow" onClick={() => setApply(true)}><PaperPlaneTilt size={18} />Solliciteer</button>}
       </div>
+      {apply && <div className="sheet-backdrop" onClick={() => setApply(false)}>
+        <div className="applysheet" role="dialog" aria-label="Solliciteren" onClick={(e) => e.stopPropagation()}>
+          <span className="handle" />
+          <h2 className="h-lg">Solliciteren bij {c.name}</h2>
+          <p className="sm muted">Geen cv of motivatiebrief nodig. {c.name} ziet je Work Profile en waarom je past.</p>
+          <div className="panel" style={{ background: "var(--elev)", boxShadow: "none" }}>
+            <div className="row"><Avatar p={p} /><span className="grow"><b>{p.name}</b><br /><span className="xs muted">{p.headline} · {p.city}</span></span><span className="match">{j.m.score}%</span></div>
+            <div className="row wrap">{p.certs.slice(0, 4).map((x) => <span key={x.id || x.name} className="chip">{x.name}</span>)}{p.projects.length > 0 && <span className="chip">{p.projects.length} projecten</span>}</div>
+          </div>
+          <label className="f">Bericht (optioneel)<textarea className="in" style={{ minHeight: 76 }} maxLength={300} placeholder="Bijv. wanneer je kunt starten of een vraag over het project" value={note} onChange={(e) => setNote(e.target.value)} /></label>
+          <button className="btn primary block" onClick={() => interest(j, note)}><PaperPlaneTilt size={18} />Verstuur sollicitatie</button>
+          <button className="btn ghost block" onClick={() => setApply(false)}>Annuleer</button>
+        </div>
+      </div>}
     </div>
   );
 }
