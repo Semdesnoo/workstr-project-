@@ -13,7 +13,7 @@ import { TRIGGERS, STAGES, CHANNELS, processQueue, demoSend } from "./engine.js"
 import { fireEvent, addMessage } from "./agents.js";
 import { StatusBadge, initials } from "./ui.jsx";
 
-const uid = () => Math.random().toString(36).slice(2, 9);
+const uid = () => crypto.randomUUID();
 const fmt = (iso) => new Date(iso).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const CH_ICON = { whatsapp: WhatsappLogo, email: EnvelopeSimple, app: DeviceMobile };
 const STATUS_NL = { queued: "In wachtrij", retry: "Opnieuw proberen", sent: "Verzonden", failed: "Mislukt", dead: "Dead-letter", approval: "Wacht op goedkeuring", cancelled: "Geannuleerd" };
@@ -308,12 +308,13 @@ export function Sourcing({ ctx, jobs }) {
   const [jid, setJid] = useState(jobs[0]?.id);
   const [src, setSrc] = useState("");
   const j = jobs.find((x) => x.id === jid);
-  const inCrm = (x) => ats.candidates.some((c) => c.id === x.id);
+  const inCrm = (x) => ats.candidates.some((c) => c.extId === x.id);
   const rows = externalPool.filter((x) => (!src || x.source === src) && `${x.name} ${x.headline} ${x.city} ${x.skills.join(" ")}`.toLowerCase().includes(q.toLowerCase()))
     .map((x) => ({ x, s: matchJob(toProfile(x), j).score })).sort((a, b) => b.s - a.s);
   const importOne = (x) => {
-    set((a) => ({ ...a, candidates: [...a.candidates, { ...x, tags: [] }], apps: [...a.apps, { id: uid(), cand: x.id, job: jid, stage: "Nieuw" }] }));
-    emit({ type: "candidate.created", cand: x.id, job: jid });
+    const id = uid();
+    set((a) => ({ ...a, candidates: [...a.candidates, { ...x, id, extId: x.id, tags: [] }], apps: [...a.apps, { id: uid(), cand: id, job: jid, stage: "Nieuw" }] }));
+    emit({ type: "candidate.created", cand: id, job: jid });
   };
   return (<>
     <Head title="Sourcing" sub="Zoek buiten je eigen CRM: externe databases, LinkedIn en leveranciers. Importeren start je workflows automatisch." />

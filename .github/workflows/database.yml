@@ -7,7 +7,7 @@ name: Database
 on:
   push:
     branches: [main]
-    paths: ["supabase/**", ".github/workflows/database.yml"]
+    paths: ["supabase/**", "src/platform/db.js", "src/platform/agents.js", ".github/workflows/database.yml"]
   workflow_dispatch:
 
 concurrency: database
@@ -32,6 +32,11 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Tenant isolation test
         run: node supabase/tests/isolation.mjs
+        env:
+          SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      - name: Business persistence test
+        run: node supabase/tests/business.mjs
         env:
           SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

@@ -13,9 +13,9 @@ import { useAts, useWorker, ATS_NAV, Candidates, Pipeline, Inbox, Agenda, Workfl
 
 const ME_CO = "vanoord"; // logged-in demo employer
 const t = () => new Date().toTimeString().slice(0, 5);
-const uid = () => Math.random().toString(36).slice(2, 9);
+const uid = () => crypto.randomUUID();
 
-function Shell({ sub, nav, page, setPage, children }) {
+function Shell({ sub, nav, page, setPage, children, footer }) {
   return (
     <div className="desk">
       <nav className="side" aria-label={`${sub} menu`}>
@@ -25,6 +25,7 @@ function Shell({ sub, nav, page, setPage, children }) {
             <Icon size={18} />{label}{count ? <span className="count">{count}</span> : null}
           </button>
         ))}
+        {footer}
       </nav>
       <main className="main">{children}</main>
     </div>
@@ -36,20 +37,24 @@ const Head = ({ title, sub, children }) => (
 const Kpi = ({ label, value, hint }) => <div className="kpi"><span className="sm muted">{label}</span><b>{value}</b>{hint && <span className="xs muted">{hint}</span>}</div>;
 
 // ============================ Workstr Business ============================
-export function Business({ store, update }) {
+const SAVE = { saved: "✓ Opgeslagen", saving: "Opslaan…" };
+export function Business({ store, update, company, status = "saved", onSignOut }) {
   const [[page, focus], setNav] = useState(["overview", null]);
   const go = (p, f = null) => setNav([p, f]);
-  const jobs = [...store.jobs, ...seedJobs];
-  const myJobs = jobs.filter((j) => j.company === ME_CO);
+  const jobs = store.jobs;
+  const myJobs = jobs;
   const ctx = useAts(store, update, jobs);
   useWorker(ctx);
   const pending = store.ats.queue.filter((j) => j.status === "approval").length;
   const nav = [["overview", "Overzicht", SquaresFour], ["agents", "AI Agents", Robot, (store.ats.approvals || []).length + pending], ATS_NAV[0], ATS_NAV[1], ["vacancies", "Vacatures", Briefcase, myJobs.length], ...ATS_NAV.slice(2, 7),
     ATS_NAV[7], ["analytics", "Analytics", ChartBar], ["company", "Bedrijfsprofiel", Buildings], ["settings", "Abonnement", Gear]];
   return (
-    <Shell sub="Business" nav={nav} page={page} setPage={go}>
-      {page === "overview" && <BizOverview ctx={ctx} myJobs={myJobs} go={go} />}
-      {page === "agents" && <AgentsHub store={store} update={update} jobs={jobs} company={ME_CO} />}
+    <Shell sub="Business" nav={nav} page={page} setPage={go} footer={<div className="stack" style={{ gap: 6, marginTop: "auto", padding: "0 10px" }}>
+      <span className="xs" role="status" style={{ color: status.startsWith("error") ? "var(--err)" : "var(--muted)" }}>{SAVE[status] || `Opslaan mislukt: ${status.slice(6)}`}</span>
+      <span className="xs muted">{company.name}</span>
+      <button className="btn sm ghost" onClick={onSignOut}>Uitloggen</button></div>}>
+      {page === "overview" && <BizOverview ctx={ctx} myJobs={myJobs} go={go} name={company.name} />}
+      {page === "agents" && <AgentsHub store={store} update={update} jobs={jobs} company={company.id} />}
       {page === "kandidaten" && <Candidates ctx={ctx} jobs={jobs} go={go} />}
       {page === "pipeline" && <Pipeline ctx={ctx} jobs={jobs} />}
       {page === "vacancies" && <Vacancies myJobs={myJobs} update={update} />}
@@ -66,14 +71,14 @@ export function Business({ store, update }) {
   );
 }
 
-function BizOverview({ ctx, myJobs, go }) {
+function BizOverview({ ctx, myJobs, go, name }) {
   const { ats, cand, job } = ctx;
   const week = ats.events.filter((e) => Math.abs(daysLeft(e.date)) <= 7).length;
   const sent = ats.queue.filter((j) => j.status === "sent").length + ats.messages.filter((m) => m.dir === "out" && m.status === "sent").length;
   const tasks = ats.tasks.filter((t) => !t.done);
   const issues = ats.queue.filter((j) => ["failed", "dead", "approval", "retry"].includes(j.status));
   return (<>
-    <Head title="Goedemorgen, Van Oord" sub="Je AI Recruitment OS — wat er vandaag gebeurt." />
+    <Head title={`Goedemorgen, ${name}`} sub="Je AI Recruitment OS — wat er vandaag gebeurt." />
     <div className="kpis">
       <Kpi label="Kandidaten in CRM" value={ats.candidates.length} /><Kpi label="Actieve sollicitaties" value={ats.apps.filter((a) => !["Geplaatst", "Afgewezen"].includes(a.stage)).length} />
       <Kpi label="Gesprekken (±7 d)" value={week} /><Kpi label="Berichten verzonden" value={sent} /><Kpi label="Workflows actief" value={ats.workflows.filter((w) => w.on).length} hint={`${myJobs.length} eigen vacatures`} />

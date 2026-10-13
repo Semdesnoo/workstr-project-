@@ -2,7 +2,6 @@
 // applyPlan() executes a plan against the store; fireEvent() runs triggers → workflows.
 // Predictable checks (certs, rates, distance, slots) are rules; language (structuring, messages) is
 // templated here and swappable for an LLM call server-side. Nothing irreversible happens without a human.
-import { seedJobs } from "./data.js";
 import { matchJob, toProfile, certStatus, daysLeft, km, structureVacancy } from "./logic.js";
 import { TRIGGERS, CHANNELS, runWorkflows, enqueue } from "./engine.js";
 
@@ -17,10 +16,9 @@ export const AGENTS = [
   { id: "interview", name: "Interview Agent", role: "Plant gesprekken in vrije slots en laat de bevestiging automatisch versturen." },
 ];
 
-let n = 0;
-const uid = () => `${Date.now().toString(36)}${(n++).toString(36)}`;
+const uid = () => crypto.randomUUID();
 const first = (c) => c.name.split(" ")[0];
-export const allJobs = (store) => [...store.jobs, ...seedJobs];
+export const allJobs = (store) => store.jobs;
 const scoreOf = (c, j) => matchJob(toProfile(c), j);
 const appsFor = (ats, jobId, stage) => ats.apps.filter((a) => a.job === jobId && (!stage || a.stage === stage));
 
@@ -28,7 +26,7 @@ const appsFor = (ats, jobId, stage) => ats.apps.filter((a) => a.job === jobId &&
 export function vacancyAgent(text, company) {
   const v = structureVacancy(text);
   const missing = [!v.title && "functietitel", !v.city && "locatie", !v.rateMax && "salaris/tarief", !v.contract && "contractvorm", !v.certs.length && "certificaten"].filter(Boolean);
-  const job = { ...v, id: `j${uid()}`, company, contract: v.contract || "project", start: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
+  const job = { ...v, id: uid(), company, contract: v.contract || "project", start: new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
     duration: "n.t.b.", photo: "./work/w3.jpg", team: "", tasks: v.tasks.length ? v.tasks : ["Zie gesprek"] };
   const ok = v.title && v.city;
   return {
@@ -49,11 +47,11 @@ export function matchingAgent(ats, job, min = 70) {
 }
 
 export function talentAgent(ats, pool, job, min = 75, limit = 3) {
-  const hits = pool.filter((x) => !ats.candidates.some((c) => c.id === x.id))
+  const hits = pool.filter((x) => !ats.candidates.some((c) => c.extId === x.id))
     .map((x) => ({ x, s: scoreOf(x, job).score })).filter((h) => h.s >= min).sort((a, b) => b.s - a.s).slice(0, limit);
   return {
     log: [`Extern gezocht voor ${job.title}: ${hits.length} profielen ≥ ${min}% (max ${limit}).`, ...hits.map((h) => `${h.x.name} (${h.x.source}) ${h.s}%`)],
-    actions: hits.flatMap((h) => [{ type: "import", candidate: { ...h.x, tags: ["Gesourcet"] } }, { type: "app", cand: h.x.id, job: job.id, stage: "Nieuw", event: true }]),
+    actions: hits.flatMap((h) => { const id = uid(); return [{ type: "import", candidate: { ...h.x, id, extId: h.x.id, tags: ["Gesourcet"] } }, { type: "app", cand: id, job: job.id, stage: "Nieuw", event: true }]; }),
   };
 }
 

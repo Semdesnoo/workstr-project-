@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { me, seedConversations, seedRequests, seedTimesheets, seedAgentLog, seedApprovals, seedCandidates, seedApps, seedEvents, seedMessages, seedWorkflows } from "./data.js";
 import Candidate from "./Candidate.jsx";
-import { Business, Msp } from "./Desk.jsx";
+import { Msp } from "./Desk.jsx";
+import BusinessGate from "./Cloud.jsx";
 import { Logo } from "./ui.jsx";
 import "./platform.css";
 
@@ -44,7 +45,7 @@ export default function Platform() {
         <div className="phone"><Candidate store={store} update={update} /></div>
       </div>
     )}
-    {surface === "business" && <Business store={store} update={update} />}
+    {surface === "business" && <BusinessGate />}
     {surface === "managed" && <Msp store={store} update={update} />}
   </>);
 }

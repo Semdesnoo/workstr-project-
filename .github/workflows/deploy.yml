@@ -1,0 +1,35 @@
+# Builds the site with the public Supabase config and publishes dist/ to gh-pages.
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["supabase/**", "**.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: pages
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test src/platform/*.test.js
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      - run: cp dist/index.html dist/404.html && touch dist/.nojekyll
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          clean: true
