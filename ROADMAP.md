@@ -14,6 +14,14 @@ Alles wat die loop niet sneller of beter maakt, wacht. Bouwen en testen gebeurt 
 | Candidate App: Work Profile, Discover, Matches, Chat, CV (`#/app`) | Klikbare demo in localStorage. **Hier ligt de focus.** |
 | Managed (MSP) | Demo. Geparkeerd. |
 
+## Besluiten
+
+**Twee soorten profielen.**
+- *Work Profile*: van de professional zelf (freelancer/zzp of in vaste dienst, wel of niet zoekend). Een bedrijf ziet het alleen na interesse van de professional of als die "vindbaar" aanzet.
+- *Beheerd profiel*: van een bedrijf (eigen pool, CRM, leverancier). Alleen zichtbaar voor dat bedrijf. Het bedrijf kan de persoon uitnodigen het profiel over te nemen → wordt een Work Profile; het bedrijf houdt toegang via de koppeling.
+
+**Matching = gewogen score + harde poort.** Skills 30, ervaring 20, certificaten 20, locatie 10, beschikbaarheid 10, tarief 5, contract 5. Mist een verplicht certificaat of is het verlopen, dan nooit hoger dan 59% en staat de reden erbij. In technisch werk is een certificaat geen pluspunt maar een voorwaarde; een "85% match" zonder VCA leidt niet tot een plaatsing. (Gebouwd in `logic.js`, getest.)
+
 ## Volgorde
 
 1. **Work Profile.** Profiel in ±5 minuten: naam, foto, functie, locatie, ervaring, skills, certificaten, beschikbaarheid, tarief, contractvorm, intro. Kernfunctie: **+ Add Project** (foto → één zin → AI structureert → gebruiker keurt goed).

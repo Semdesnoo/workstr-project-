@@ -28,11 +28,33 @@ export function km(a, b) {
 const AVAIL_DAYS = { now: 0, "2w": 14, "1m": 30 };
 export const AVAIL_LABEL = { now: "Per direct", "2w": "Binnen 2 weken", "1m": "Binnen 1 maand", date: "Vanaf datum", no: "Niet beschikbaar" };
 
+// Years of work experience: explicit `years` (CRM/sourcing) or summed from experience entries (YYYY-MM).
+export function experienceYears(p, now = new Date()) {
+  if (typeof p.years === "number") return p.years;
+  const m = (s) => { const [y, mo] = String(s).split("-").map(Number); return y * 12 + (mo || 1) - 1; };
+  const nowM = now.getFullYear() * 12 + now.getMonth();
+  return Math.round((p.experience || []).reduce((n, e) => n + Math.max(0, (e.to ? m(e.to) : nowM) - m(e.from)), 0) / 12 * 10) / 10;
+}
+
 // Explainable match: every point of the score comes with a reason the user can read.
-// Weights: certs 35, skills 25, location 15, rate 10, contract 10, availability 5.
+// Weights: skills 30, experience 20, certificates 20, location 10, availability 10, rate 5, contract 5.
+// Required certificates are a hard gate in technical work: one missing or expired caps the score at CAP.
+export const CAP = 59;
 export function matchJob(p, job, now = new Date()) {
   const reasons = [];
-  let score = 0;
+  let score = 0, gate = false;
+
+  const have = new Set(p.skills.map((s) => s.toLowerCase()));
+  const hit = (job.skills || []).filter((s) => have.has(s.toLowerCase()));
+  score += job.skills?.length ? (30 * hit.length) / job.skills.length : 30;
+  if (hit.length) reasons.push({ type: "ok", text: `Skills: ${hit.slice(0, 3).join(", ")}` });
+
+  const years = experienceYears(p, now), need = job.minYears ?? 3;
+  score += 20 * Math.min(1, years / need);
+  if (years >= need) reasons.push({ type: "ok", text: `${years} jaar ervaring (gevraagd: ${need})` });
+  else reasons.push({ type: "warn", text: `${years} jaar ervaring — gevraagd is ${need}` });
+  if ((p.projects || []).some((pr) => pr.sector === job.sector))
+    reasons.push({ type: "ok", text: `Je hebt ${job.sector.toLowerCase()}-ervaring in je projecten` });
 
   const certs = job.certs || [];
   let certPts = 0;
@@ -45,47 +67,39 @@ export function matchJob(p, job, now = new Date()) {
       certPts += 0.75;
       reasons.push({ type: "warn", text: `${name} verloopt binnenkort` });
     } else {
-      reasons.push({ type: "no", text: `${name} ${st === "expired" ? "is verlopen" : "ontbreekt"}` });
+      gate = true;
+      reasons.push({ type: "no", text: `${name} ${st === "expired" ? "is verlopen" : "ontbreekt"} — verplicht voor deze functie` });
     }
   }
-  score += certs.length ? (35 * certPts) / certs.length : 35;
-
-  const have = new Set(p.skills.map((s) => s.toLowerCase()));
-  const hit = (job.skills || []).filter((s) => have.has(s.toLowerCase()));
-  score += job.skills?.length ? (25 * hit.length) / job.skills.length : 25;
-  if (hit.length) reasons.push({ type: "ok", text: `Skills: ${hit.slice(0, 3).join(", ")}` });
-  if ((p.projects || []).some((pr) => pr.sector === job.sector))
-    reasons.push({ type: "ok", text: `Je hebt ${job.sector.toLowerCase()}-ervaring in je projecten` });
+  score += certs.length ? (20 * certPts) / certs.length : 20;
 
   const dist = km(p.city, job.city);
   if (dist === null || dist <= p.radiusKm) {
-    score += 15;
+    score += 10;
     reasons.push({ type: "ok", text: dist === null ? "Locatie onbekend — check zelf" : `Locatie ligt binnen je radius (${dist} km)` });
   } else {
-    score += dist <= p.radiusKm * 2 ? 7 : 0;
+    score += dist <= p.radiusKm * 2 ? 5 : 0;
     reasons.push({ type: "warn", text: `${dist} km — buiten je radius van ${p.radiusKm} km` });
   }
-
-  if (job.unit === "uur") {
-    if (job.rateMax >= p.minRate) {
-      score += 10;
-      reasons.push({ type: "ok", text: "Het tarief past binnen je voorkeur" });
-    } else reasons.push({ type: "no", text: `Tarief onder je minimum van €${p.minRate}/u` });
-  } else score += 5; // salary jobs: no hourly preference to compare
-
-  if (p.contracts.includes(job.contract)) score += 10;
-  else reasons.push({ type: "warn", text: `Contractvorm '${job.contract}' staat niet in je voorkeuren` });
 
   if (p.availability === "no") reasons.push({ type: "warn", text: "Je staat op niet beschikbaar" });
   else {
     const from = p.availability === "date" ? daysLeft(p.availableFrom || now, now) : AVAIL_DAYS[p.availability];
-    if (from <= daysLeft(job.start, now)) score += 5;
+    if (from <= daysLeft(job.start, now)) score += 10;
     else reasons.push({ type: "warn", text: "Start ligt vóór je beschikbaarheid" });
   }
 
+  if (job.unit === "uur") {
+    if (job.rateMax >= p.minRate) { score += 5; reasons.push({ type: "ok", text: "Het tarief past binnen je voorkeur" }); }
+    else reasons.push({ type: "no", text: `Tarief onder je minimum van €${p.minRate}/u` });
+  } else score += 5; // salary jobs: no hourly preference to compare
+
+  if (p.contracts.includes(job.contract)) score += 5;
+  else reasons.push({ type: "warn", text: `Contractvorm '${job.contract}' staat niet in je voorkeuren` });
+
   const order = { ok: 0, warn: 1, no: 2 };
   reasons.sort((a, b) => order[a.type] - order[b.type]);
-  return { score: Math.round(score), reasons };
+  return { score: Math.round(gate ? Math.min(score, CAP) : score), reasons, gated: gate };
 }
 
 // ---- Structuring (projects + vacancies) ------------------------------------

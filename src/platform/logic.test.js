@@ -1,7 +1,7 @@
 // Run: node --test src/platform
 import test from "node:test";
 import assert from "node:assert/strict";
-import { certStatus, matchJob, structureProject, structureVacancy, timesheetIssues, compliance, km } from "./logic.js";
+import { certStatus, matchJob, structureProject, structureVacancy, timesheetIssues, compliance, km, CAP, experienceYears } from "./logic.js";
 import { me, seedJobs, workers, REQUIRED_DOCS } from "./data.js";
 
 const now = new Date("2026-10-12");
@@ -27,6 +27,18 @@ test("match explains itself and ranks the right job first", () => {
 });
 
 test("distance", () => assert.ok(Math.abs(km("Rotterdam", "Amsterdam") - 57) < 5));
+
+test("required certificate is a hard gate; experience counts", () => {
+  const job = { ...seedJobs[0], certs: ["UT2", "VCA"], skills: ["UT"], minYears: 4, start: inDays(60) };
+  const full = { ...me, years: 6, certs: [{ name: "UT2", validUntil: inDays(400), verified: true }, { name: "VCA", validUntil: inDays(400), verified: true }] };
+  const noVca = { ...full, certs: full.certs.slice(0, 1) };
+  assert.ok(matchJob(full, job, now).score > 90);
+  const g = matchJob(noVca, job, now);
+  assert.equal(g.score, CAP);
+  assert.ok(g.gated && g.reasons.some((r) => r.type === "no" && r.text.startsWith("VCA")));
+  assert.ok(matchJob({ ...full, years: 1 }, job, now).score < matchJob(full, job, now).score);
+  assert.equal(experienceYears({ experience: [{ from: "2020-01", to: "2022-01" }] }, now), 2);
+});
 
 test("project structuring only labels what was written", () => {
   const p = structureProject("UT inspecties uitgevoerd aan offshore jacket.");

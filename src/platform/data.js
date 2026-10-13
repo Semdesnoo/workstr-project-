@@ -133,34 +133,34 @@ export const seedConversations = [
 
 // ---- Business ---------------------------------------------------------------
 export const talent = [
-  { id: "t1", name: "Sem de Snoo", headline: "NDT Inspector · UT2 / PAUT", city: "Schiedam", availability: "2w", rate: 55,
+  { id: "t1", name: "Sem de Snoo", years: 7, headline: "NDT Inspector · UT2 / PAUT", city: "Schiedam", availability: "2w", rate: 55,
     skills: me.skills, certs: [{ name: "UT2", verified: true }, { name: "VCA", verified: true }, { name: "BOSIET", verified: true }], projects: 2 },
-  { id: "t2", name: "Youssef El Amrani", headline: "UT/MT Inspector", city: "Rotterdam", availability: "now", rate: 58,
+  { id: "t2", name: "Youssef El Amrani", years: 9, headline: "UT/MT Inspector", city: "Rotterdam", availability: "now", rate: 58,
     skills: ["UT", "MT", "NDT", "Offshore", "Weld Inspection"], certs: [{ name: "UT2", verified: true }, { name: "BOSIET", verified: false }, { name: "VCA", verified: true }], projects: 5 },
-  { id: "t3", name: "Kim Jansen", headline: "Welding Inspector CSWIP 3.1", city: "Vlissingen", availability: "1m", rate: 62,
+  { id: "t3", name: "Kim Jansen", years: 5, headline: "Welding Inspector CSWIP 3.1", city: "Vlissingen", availability: "1m", rate: 62,
     skills: ["Weld Inspection", "VT", "WPS"], certs: [{ name: "CSWIP 3.1", verified: true }, { name: "VCA", verified: true }], projects: 3 },
-  { id: "t4", name: "Pieter Bos", headline: "PAUT / ToFD Level 2", city: "Antwerpen", availability: "now", rate: 70,
+  { id: "t4", name: "Pieter Bos", years: 11, headline: "PAUT / ToFD Level 2", city: "Antwerpen", availability: "now", rate: 70,
     skills: ["PAUT", "ToFD", "UT", "NDT"], certs: [{ name: "UT2", verified: true }, { name: "PAUT", verified: true }], projects: 7 },
-  { id: "t5", name: "Anouk de Graaf", headline: "QA/QC Coordinator Offshore", city: "Den Helder", availability: "now", rate: 68,
+  { id: "t5", name: "Anouk de Graaf", years: 8, headline: "QA/QC Coordinator Offshore", city: "Den Helder", availability: "now", rate: 68,
     skills: ["NDT", "Offshore", "Coating Inspection", "Rapportage"], certs: [{ name: "BOSIET", verified: true }, { name: "VCA", verified: true }], projects: 4 },
-  { id: "t6", name: "Lars Meijer", headline: "MIG/MAG Lasser", city: "Moerdijk", availability: "2w", rate: 38,
+  { id: "t6", name: "Lars Meijer", years: 2, headline: "MIG/MAG Lasser", city: "Moerdijk", availability: "2w", rate: 38,
     skills: ["MIG/MAG", "Lassen", "Tekeninglezen"], certs: [{ name: "VCA", verified: true }], projects: 1 },
 ];
 
 // ---- Business ATS/CRM (layer 1) + sourcing (layer 2) -------------------------
 const cert = (name, days, verified = true) => ({ name, validUntil: d(days), verified });
 export const seedCandidates = [
-  { id: "c1", name: "Sem de Snoo", headline: "NDT Inspector · UT2 / PAUT", city: "Schiedam", email: "sem@example.nl", phone: "+31612345678", source: "Workstr app", availability: "2w", rate: 55,
+  { id: "c1", name: "Sem de Snoo", years: 7, headline: "NDT Inspector · UT2 / PAUT", city: "Schiedam", email: "sem@example.nl", phone: "+31612345678", source: "Workstr app", availability: "2w", rate: 55,
     skills: ["UT", "PAUT", "NDT", "Weld Inspection", "Offshore"], certs: [cert("UT2", 540), cert("VCA", 410), cert("BOSIET", 24)], tags: ["Offshore"] },
-  { id: "c2", name: "Youssef El Amrani", headline: "UT/MT Inspector", city: "Rotterdam", email: "youssef@example.nl", phone: "+31687654321", source: "Workstr app", availability: "now", rate: 58,
+  { id: "c2", name: "Youssef El Amrani", years: 9, headline: "UT/MT Inspector", city: "Rotterdam", email: "youssef@example.nl", phone: "+31687654321", source: "Workstr app", availability: "now", rate: 58,
     skills: ["UT", "MT", "NDT", "Offshore", "Weld Inspection"], certs: [cert("UT2", 320), cert("VCA", 200), cert("BOSIET", 300, false)], tags: ["Rotatie 14/14"] },
-  { id: "c3", name: "Kim Jansen", headline: "Welding Inspector CSWIP 3.1", city: "Vlissingen", email: "kim@example.nl", phone: "", source: "Leverancier", availability: "1m", rate: 62,
+  { id: "c3", name: "Kim Jansen", years: 5, headline: "Welding Inspector CSWIP 3.1", city: "Vlissingen", email: "kim@example.nl", phone: "", source: "Leverancier", availability: "1m", rate: 62,
     skills: ["Weld Inspection", "VT", "WPS"], certs: [cert("CSWIP 3.1", 700), cert("VCA", 18)], tags: [] },
-  { id: "c4", name: "Pieter Bos", headline: "PAUT / ToFD Level 2", city: "Antwerpen", email: "pieter@example.be", phone: "+32470123456", source: "Externe database", availability: "now", rate: 70,
+  { id: "c4", name: "Pieter Bos", years: 11, headline: "PAUT / ToFD Level 2", city: "Antwerpen", email: "pieter@example.be", phone: "+32470123456", source: "Externe database", availability: "now", rate: 70,
     skills: ["PAUT", "ToFD", "UT", "NDT"], certs: [cert("UT2", 600), cert("PAUT", 400)], tags: ["België"] },
-  { id: "c5", name: "Anouk de Graaf", headline: "QA/QC Coordinator Offshore", city: "Den Helder", email: "anouk@example.nl", phone: "+31611122233", source: "LinkedIn", availability: "now", rate: 68,
+  { id: "c5", name: "Anouk de Graaf", years: 8, headline: "QA/QC Coordinator Offshore", city: "Den Helder", email: "anouk@example.nl", phone: "+31611122233", source: "LinkedIn", availability: "now", rate: 68,
     skills: ["NDT", "Offshore", "Coating Inspection", "Rapportage"], certs: [cert("BOSIET", 80), cert("VCA", 500), cert("UT2", 260)], tags: [] },
-  { id: "c6", name: "Lars Meijer", headline: "MIG/MAG Lasser", city: "Moerdijk", email: "lars@example.nl", phone: "+31655566677", source: "Workstr app", availability: "2w", rate: 38,
+  { id: "c6", name: "Lars Meijer", years: 2, headline: "MIG/MAG Lasser", city: "Moerdijk", email: "lars@example.nl", phone: "+31655566677", source: "Workstr app", availability: "2w", rate: 38,
     skills: ["MIG/MAG", "Lassen", "Tekeninglezen"], certs: [cert("VCA", 300)], tags: [] },
 ];
 export const seedApps = [
@@ -193,12 +193,12 @@ export const seedWorkflows = [
 
 // External sourcing pool (layer 2). Demo dataset — live: LinkedIn partner API / data provider.
 export const externalPool = [
-  { id: "x1", name: "Daan Vermeulen", headline: "NDT Level 2 UT/MT", city: "Rotterdam", source: "LinkedIn", email: "", phone: "", availability: "1m", rate: 60, skills: ["UT", "MT", "NDT", "Offshore"], certs: [cert("UT2", 400), cert("BOSIET", 200)] },
-  { id: "x2", name: "Ilse Kramer", headline: "Coating Inspector NACE 2", city: "Vlissingen", source: "Externe database", email: "ilse@example.nl", phone: "+31622233344", availability: "now", rate: 64, skills: ["Coating Inspection", "Offshore", "Rapportage"], certs: [cert("VCA", 300)] },
-  { id: "x3", name: "Tomasz Nowak", headline: "TIG/MIG Lasser 6G", city: "Moerdijk", source: "Externe database", email: "tomasz@example.pl", phone: "+48600111222", availability: "now", rate: 42, skills: ["TIG", "MIG/MAG", "Lassen"], certs: [cert("VCA", 120)] },
-  { id: "x4", name: "Rik Hoekstra", headline: "PAUT Technician Level 2", city: "Schiedam", source: "LinkedIn", email: "", phone: "", availability: "2w", rate: 66, skills: ["PAUT", "UT", "NDT", "Weld Inspection"], certs: [cert("UT2", 500), cert("PAUT", 380), cert("VCA", 400)] },
-  { id: "x5", name: "Sara Bakker", headline: "QA/QC Inspector Energy", city: "Eemshaven", source: "Externe database", email: "sara@example.nl", phone: "+31633344455", availability: "now", rate: 70, skills: ["NDT", "UT", "Offshore", "Coating Inspection"], certs: [cert("UT2", 300), cert("BOSIET", 250), cert("GWO", 300)] },
-  { id: "x6", name: "Mehmet Yilmaz", headline: "Welding Inspector CSWIP 3.1", city: "Antwerpen", source: "LinkedIn", email: "", phone: "", availability: "1m", rate: 65, skills: ["Weld Inspection", "VT", "WPS"], certs: [cert("CSWIP 3.1", 600)] },
+  { id: "x1", name: "Daan Vermeulen", years: 6, headline: "NDT Level 2 UT/MT", city: "Rotterdam", source: "LinkedIn", email: "", phone: "", availability: "1m", rate: 60, skills: ["UT", "MT", "NDT", "Offshore"], certs: [cert("UT2", 400), cert("BOSIET", 200)] },
+  { id: "x2", name: "Ilse Kramer", years: 4, headline: "Coating Inspector NACE 2", city: "Vlissingen", source: "Externe database", email: "ilse@example.nl", phone: "+31622233344", availability: "now", rate: 64, skills: ["Coating Inspection", "Offshore", "Rapportage"], certs: [cert("VCA", 300)] },
+  { id: "x3", name: "Tomasz Nowak", years: 3, headline: "TIG/MIG Lasser 6G", city: "Moerdijk", source: "Externe database", email: "tomasz@example.pl", phone: "+48600111222", availability: "now", rate: 42, skills: ["TIG", "MIG/MAG", "Lassen"], certs: [cert("VCA", 120)] },
+  { id: "x4", name: "Rik Hoekstra", years: 5, headline: "PAUT Technician Level 2", city: "Schiedam", source: "LinkedIn", email: "", phone: "", availability: "2w", rate: 66, skills: ["PAUT", "UT", "NDT", "Weld Inspection"], certs: [cert("UT2", 500), cert("PAUT", 380), cert("VCA", 400), cert("BOSIET", 320)] },
+  { id: "x5", name: "Sara Bakker", years: 10, headline: "QA/QC Inspector Energy", city: "Eemshaven", source: "Externe database", email: "sara@example.nl", phone: "+31633344455", availability: "now", rate: 70, skills: ["NDT", "UT", "Offshore", "Coating Inspection"], certs: [cert("UT2", 300), cert("BOSIET", 250), cert("GWO", 300)] },
+  { id: "x6", name: "Mehmet Yilmaz", years: 7, headline: "Welding Inspector CSWIP 3.1", city: "Antwerpen", source: "LinkedIn", email: "", phone: "", availability: "1m", rate: 65, skills: ["Weld Inspection", "VT", "WPS"], certs: [cert("CSWIP 3.1", 600)] },
 ];
 
 export const plans = [
