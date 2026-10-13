@@ -9,9 +9,10 @@ if (!url || !key) throw new Error("Set SUPABASE_URL and SUPABASE_ANON_KEY");
 
 async function tenant(label) {
   const db = createClient(url, key, { auth: { persistSession: false } });
-  const email = `isolation-${label}-${Date.now()}@workstr-isolation.nl`;
-  const { error: e1 } = await db.auth.signUp({ email, password: crypto.randomUUID() });
+  const email = `workstr-isolation-${label}-${Date.now()}@mailinator.com`; // public test inbox; Supabase checks MX
+  const { data: auth, error: e1 } = await db.auth.signUp({ email, password: crypto.randomUUID() });
   if (e1) throw e1;
+  if (!auth.session) throw new Error('No session after sign-up: turn OFF Authentication → Email → "Confirm email"');
   const { data: company, error: e2 } = await db.rpc("create_company", { p_name: `Test ${label}` });
   if (e2) throw e2;
   const { data: cand, error: e3 } = await db.from("candidates").insert({ company_id: company, name: `Kandidaat ${label}` }).select().single();
