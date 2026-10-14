@@ -4,7 +4,7 @@
 
 **AI Recruitment Operating System voor technische recruitment.** Drie delen: Workstr App · Workstr Business · Workstr Managed.
 
-- **Website** (`index.html` → `src/site/`): opbouw geïnspireerd op bird.com (rustige layout, grote tweekleurige koppen, live productmockups) en jaicob.ai (zoek-hero, feature-tabs, oud-vs-nieuw, AI-agents). Eigen merk, eigen teksten, geen overgenomen code, logo's of claims. Donker standaard, licht/donker-schakelaar.
+- **Website** (`src/site/`, 10 pagina's: home, professionals, business, managed-services, ai, about, contact, early-access, privacy, terms). Elke pagina is een eigen statische HTML-ingang met title, description, canonical, Open Graph en JSON-LD, gegenereerd door `node scripts/site-pages.mjs` (schrijft ook `public/sitemap.xml` en `robots.txt`). Teksten en demodata staan in `src/site/content.js` (klaar voor CMS/EN). Interactieve demo's in `src/site/demos.jsx`, app-schermen als HTML/CSS in `src/site/screens.jsx`. Formulieren schrijven naar Supabase-tabel `leads` (alleen insert, RLS). Analytics-events (`track()` in `src/site/lib.js`) blijven in de browser tot er consent en een tool is. Media vervangen: paden in `media` bovenin `content.js` (`public/media/`).
 - **Platform** (`app.html` → `src/platform/`), één ecosysteem, drie interfaces:
   - `#/app`: Candidate App (mobile-first): Discover, Matches, Create, Inbox, Work Profile, Generate CV.
   - `#/business`: Workstr Business, het AI Recruitment OS.
@@ -34,13 +34,13 @@ Node.js 22.12+.
 npm ci
 npm run dev
 npm run build
-node --test src/platform/*.test.js       # unit: matching, engine, agents
+node --test src/platform/*.test.js src/site/lib.test.js   # unit: matching, engine, agents, formuliervalidatie
 npm test                                  # Playwright e2e + axe (WCAG AA), Edge
 ```
 
 ## Live
 
-https://semdesnoo.github.io/workstr-project-/ (site) · `/app.html` (platform). Deploy: `dist/` naar branch `gh-pages`.
+https://semdesnoo.github.io/workstr-project-/ (site) · `/app.html` (platform). Deploy: GitHub Actions (`deploy.yml`) bij elke push naar `main`.
 
 ## Nog niet gebouwd
 
@@ -48,4 +48,4 @@ Echte backend/auth en database, live kanalen (WhatsApp Cloud API, e-mailprovider
 
 ## Media
 
-Werkfoto's in `public/work/` via Unsplash. Font: Geist. Iconen: Phosphor.
+Werkfoto's in `public/work/` via Unsplash (jpg + webp). Hero-video's in `public/media/` zijn tijdelijke eigen montages van die foto's; vervang ze door echte Workstr-beelden. Font: Geist. Iconen: Phosphor.

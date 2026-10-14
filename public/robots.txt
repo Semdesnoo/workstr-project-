@@ -1,2 +1,3 @@
 User-agent: *
 Allow: /
+Sitemap: https://semdesnoo.github.io/workstr-project-/sitemap.xml
