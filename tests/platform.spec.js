@@ -70,7 +70,7 @@ test("de loop: profiel in 4 stappen → project → interesse → bedrijf accept
   await page.getByRole("button", { name: "Verstuur" }).click();
 
   // back in the app: match modal → chat → reply
-  await page.getByRole("link", { name: "App" }).click();
+  await page.getByRole("link", { name: "App", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "It's a match" })).toBeVisible();
   await page.screenshot({ path: "test-results/proto-match.png" });
   await page.getByRole("button", { name: "Start gesprek" }).click();
@@ -105,7 +105,7 @@ test("bedrijf eerst: vacature plaatsen → matches → interesse → professiona
   await row.getByRole("button", { name: "Chat" }).click();
   await expect(page.getByText(/Leuk dat jullie interesse hebben/)).toBeVisible();
   // the published vacancy is visible to professionals in Discover
-  await page.getByRole("link", { name: "App" }).click();
+  await page.getByRole("link", { name: "App", exact: true }).click();
   await page.getByRole("button", { name: "Bekijk met demoprofiel (Sem)" }).click();
   await expect(page.getByRole("article", { name: "NDT Inspector Monopiles bij Van Oord" })).toBeAttached();
   expect(errors).toEqual([]);
@@ -171,7 +171,7 @@ test("bedrijf onboarding: account → profiel → contactpersoon → vacature �
   await expect(page.getByRole("heading", { name: "Goedemorgen, Noordzee Inspectie BV" })).toBeVisible();
   await expect(page.getByText("Maak je bedrijfsprofiel af")).toBeVisible(); // only 1 pluspunt
   await page.screenshot({ path: "test-results/proto-biz-onb-done.png" });
-  await page.getByRole("link", { name: "App" }).click();
+  await page.getByRole("link", { name: "App", exact: true }).click();
   await page.getByRole("button", { name: "Bekijk met demoprofiel (Sem)" }).click();
   const card = page.getByRole("article", { name: "NDT Inspector Monopiles bij Noordzee Inspectie BV" });
   await expect(card.locator("video")).toHaveAttribute("src", /^blob:/); // uploaded video, read back from IndexedDB
@@ -179,6 +179,25 @@ test("bedrijf onboarding: account → profiel → contactpersoon → vacature �
   await page.getByRole("tab", { name: "Bedrijf" }).click();
   await expect(page.getByText("Eva de Wit · Recruiter")).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test("business: website- en app-weergave delen dezelfde data", async ({ page }) => {
+  await fresh(page);
+  await page.goto("/app.html#/business");
+  await page.getByRole("button", { name: "Bekijk demo als Van Oord" }).click();
+  await expect(page.getByRole("navigation", { name: "Business menu" })).toBeVisible();
+  await page.getByRole("link", { name: "Mobiele app" }).click();
+  const phone = await page.locator(".iphone").boundingBox();
+  expect(phone.width).toBe(393);
+  await expect(page.getByRole("heading", { name: "Goedemorgen, Van Oord" })).toBeVisible();
+  const nav = await page.getByRole("navigation", { name: "Business menu" }).boundingBox();
+  expect(nav.y).toBeGreaterThan(phone.y + phone.height - 120); // pill nav onderin de telefoon
+  await page.getByRole("button", { name: /^Vacatures/ }).click();
+  await expect(page.getByRole("button", { name: "Vacature plaatsen" })).toBeVisible();
+  await page.screenshot({ path: "test-results/proto-biz-app.png" });
+  await page.getByRole("link", { name: "Website" }).click();
+  await expect(page.getByRole("heading", { name: "Goedemorgen, Van Oord" })).toBeVisible();
+  await expect(page.locator(".iphone")).toHaveCount(0);
 });
 
 test("managed blijft werken", async ({ page }) => {

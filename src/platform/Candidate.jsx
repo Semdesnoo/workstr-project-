@@ -166,7 +166,7 @@ function Onboarding({ store, update }) {
           <p className="muted sm">Hoe wil je Workstr gebruiken?</p>
           <button className="rolecard dark" onClick={() => setStep(-1)}><span className="ri"><Wrench size={22} /></span>
             <span><b>Ik zoek werk</b><small>Maak je Work Profile · ±5 min</small></span><ArrowRight size={20} /></button>
-          <button className="rolecard" onClick={() => { location.hash = "#/business"; }}><span className="ri"><Buildings size={22} /></span>
+          <button className="rolecard" onClick={() => { location.hash = "#/business-app"; }}><span className="ri"><Buildings size={22} /></span>
             <span><b>Ik zoek personeel</b><small>Workstr Business voor bedrijven</small></span><ArrowRight size={20} /></button>
           <button className="btn ghost block" onClick={useDemo}>Bekijk met demoprofiel (Sem)</button>
         </div>

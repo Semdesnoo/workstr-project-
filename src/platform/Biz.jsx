@@ -273,7 +273,7 @@ function BizOnboarding({ update, onDone }) {
   const toggleMedia = (m) => set("media", c.media.includes(m) ? c.media.filter((x) => x !== m) : [...c.media, m].slice(0, 6));
 
   return (
-    <div className="bonb">
+    <div className={`bonb ${step >= 0 ? "busy" : ""}`}>
       <aside className="bonb-art">
         <div className="collage" aria-hidden>{[2, 5, 7, 6].map((n) => <img key={n} src={`./work/w${n}.jpg`} alt="" />)}</div>
         <Logo sub="Business" />
