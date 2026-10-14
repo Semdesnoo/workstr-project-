@@ -2,12 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Sparkle, Plus, ChatCircle, User, MapPin, Briefcase, CurrencyEur, X, Check,
   Warning, ArrowLeft, PaperPlaneRight, Camera, Certificate, GraduationCap, Wrench, FilePdf, Lightning, CaretRight,
-  Buildings, ImageSquare, SlidersHorizontal, Heart, Eye, EyeSlash, ArrowRight, House, CaretUp, PaperPlaneTilt,
+  Buildings, ImageSquare, SlidersHorizontal, Heart, BookmarkSimple, Eye, EyeSlash, ArrowRight, House, CaretUp, PaperPlaneTilt,
 } from "@phosphor-icons/react";
 import { showInterest, sendMessage, markRead, decline, isMatch, findInterest } from "./loop.js";
 import { companies, seedJobs, CITIES } from "./data.js";
 import { matchJob, certStatus, structureProject, daysLeft, AVAIL_LABEL, CERT_WORDS, profileChecklist, completion } from "./logic.js";
-import { Logo, Reasons, StatusBadge, initials } from "./ui.jsx";
+import { Logo, Reasons, StatusBadge, initials, Media } from "./ui.jsx";
 
 const CONTRACT = { freelance: "Freelance", project: "Project", vast: "Vast", parttime: "Parttime", fulltime: "Fulltime" };
 const rateText = (j) => (j.unit === "uur" ? `€${j.rateMin}–€${j.rateMax} p/u` : `€${j.rateMin.toLocaleString("nl-NL")}–€${j.rateMax.toLocaleString("nl-NL")} p/m`);
@@ -57,6 +57,7 @@ export default function Candidate({ store, update }) {
     if (!wasWanted) setToast(`Sollicitatie verstuurd — ${companies[j.company].name} ziet nu je Work Profile`);
     setJobId(null);
   };
+  const like = (j) => update((s) => ({ ...s, liked: (s.liked || []).includes(j.id) ? s.liked.filter((x) => x !== j.id) : [...(s.liked || []), j.id] }));
   const save = (j) => { update((s) => ({ ...s, saved: s.saved.includes(j.id) ? s.saved.filter((x) => x !== j.id) : [...s.saved, j.id] })); };
   const dismiss = (j) => update((s) => ({ ...s, dismissed: [...s.dismissed, j.id] }));
   useEffect(() => {
@@ -68,7 +69,7 @@ export default function Candidate({ store, update }) {
 
   if (!store.onboarded) return <Onboarding store={store} update={update} />;
 
-  const ctx = { store, update, p, jobs, byId, mine, setJobId, setCompanyId, setChatId, openChat, setCreate, interest, save, dismiss, setToast, setCv, setPrefs, setTab };
+  const ctx = { store, update, p, jobs, byId, mine, setJobId, setCompanyId, setChatId, openChat, setCreate, interest, save, like, dismiss, setToast, setCv, setPrefs, setTab };
   return (
     <div className="app">
       <div className={`screen ${tab === "discover" ? "full" : ""}`}>
@@ -240,19 +241,20 @@ function Onboarding({ store, update }) {
   );
 }
 
-function FeedItem({ j, setJobId, setCompanyId, save, dismiss, store }) {
+function FeedItem({ j, setJobId, setCompanyId, save, like, store }) {
   const c = companies[j.company];
   const saved = store.saved.includes(j.id);
+  const liked = (store.liked || []).includes(j.id);
   const wanted = findInterest(store, j.id, "me")?.co;
   const why = j.m.gated ? j.m.reasons.find((r) => r.type === "no") : null;
   const pros = j.m.reasons.filter((r) => r.type === "ok").slice(0, 2);
   return (
     <article className="ttitem" aria-label={`${j.title} bij ${c.name}`}>
-      <img src={j.photo} alt="" />
+      <Media src={j.video || j.photo} alt={j.video ? `Video van ${c.name}` : ""} />
       <div className="rail">
-        <button aria-label={`Bedrijf ${c.name}`} onClick={() => setCompanyId(j.company)}><span className="rb glass co">{initials(c.name)}</span>Bedrijf</button>
-        <button aria-label={saved ? "Niet meer bewaren" : "Bewaar"} aria-pressed={saved} onClick={() => save(j)}><span className="rb glass"><Heart size={24} weight={saved ? "fill" : "regular"} /></span>{saved ? "Bewaard" : "Bewaar"}</button>
-        <button aria-label="Niet interessant" onClick={() => dismiss(j)}><span className="rb glass"><X size={22} /></span>Skip</button>
+        <button aria-label={`Bedrijf ${c.name}`} onClick={() => setCompanyId(j.company)}><span className="co">{initials(c.name)}</span></button>
+        <button aria-label={liked ? "Vind ik niet meer leuk" : "Vind ik leuk"} aria-pressed={liked} className={liked ? "on" : ""} onClick={() => like(j)}><Heart size={34} weight="fill" />{liked ? "Leuk" : "Like"}</button>
+        <button aria-label={saved ? "Niet meer bewaren" : "Bewaar"} aria-pressed={saved} className={saved ? "on" : ""} onClick={() => save(j)}><BookmarkSimple size={32} weight="fill" />{saved ? "Bewaard" : "Opslaan"}</button>
       </div>
       <button className="infobar" aria-label={`Bekijk vacature: ${j.title}`} onClick={() => setJobId(j.id)}>
         <span className="row between">
@@ -261,9 +263,9 @@ function FeedItem({ j, setJobId, setCompanyId, save, dismiss, store }) {
         </span>
         <b className="ib-title">{j.title}</b>
         <span className="sm muted">{rateText(j)} · {CONTRACT[j.contract]} · start {fmtDate(j.start)}</span>
-        {wanted ? <span className="sm" style={{ color: "var(--lav)", fontWeight: 600 }}>{c.name} wil jou spreken</span>
-          : why ? <span className="sm" style={{ color: "var(--err)" }}>✕ {why.text.replace(" — verplicht voor deze functie", "")}</span>
-          : <span className="sm" style={{ color: "var(--ok)" }}>✓ {pros.map((r) => r.text).join(" · ")}</span>}
+        {wanted ? <span className="sm ib-why" style={{ color: "var(--lav)", fontWeight: 600 }}>{c.name} wil jou spreken</span>
+          : why ? <span className="sm ib-why" style={{ color: "var(--err)" }}>✕ {why.text.replace(" — verplicht voor deze functie", "")}</span>
+          : <span className="sm ib-why" style={{ color: "var(--ok)" }}>✓ {pros.map((r) => r.text).join(" · ")}</span>}
         <span className="ib-more"><CaretUp size={14} weight="bold" />Tik voor bedrijf & solliciteren</span>
       </button>
     </article>
@@ -315,7 +317,7 @@ function JobDetail({ job: j, onClose, interest, save, store, setCompanyId, p, op
   return (
     <div className="overlay" role="dialog" aria-label={j.title}>
       <div className="screen">
-        <div className="dhero"><img src={j.photo} alt={`Werkplek ${c.name}`} />
+        <div className="dhero"><Media src={j.video || j.photo} alt={`Werkplek ${c.name}`} />
           <button className="icon-btn" style={{ left: 16 }} aria-label="Terug" onClick={onClose}><ArrowLeft size={20} /></button>
           <button className="icon-btn" style={{ right: 16 }} aria-label="Bewaar" aria-pressed={saved} onClick={() => save(j)}><Heart size={20} weight={saved ? "fill" : "regular"} /></button>
         </div>
@@ -348,7 +350,7 @@ function JobDetail({ job: j, onClose, interest, save, store, setCompanyId, p, op
             <div className="row"><span className="avatar" style={{ width: 52, height: 52, fontSize: 16 }}>{initials(c.name)}</span>
               <span className="grow"><b>{c.name}</b><br /><span className="sm muted">{c.industry} · {c.city}</span></span></div>
             <p>{c.about}</p>
-            <div className="mediastrip">{c.media.map((m) => <img key={m} src={m} alt={`Werkplek ${c.name}`} />)}</div>
+            <div className="mediastrip">{c.media.map((m) => <Media key={m} src={m} alt={`Werkplek ${c.name}`} />)}</div>
             <ul className="reasons">{[j.team, ...c.workplace].filter(Boolean).map((w) => <li key={w}><Buildings size={18} className="muted" />{w}</li>)}</ul>
             <div className="row wrap">{c.people.map((x) => <span key={x.n} className="chip">{x.n} · {x.r}</span>)}</div>
             <button className="btn" onClick={() => setCompanyId(j.company)}>Volledig bedrijfsprofiel <ArrowRight size={16} /></button>
@@ -387,7 +389,7 @@ function Company({ id, onClose, jobs, setJobId }) {
   return (
     <div className="overlay" role="dialog" aria-label={c.name}>
       <div className="screen">
-        <div className="hero" style={{ height: 200 }}><img src={c.media[0]} alt="" /><Back onClose={onClose} /></div>
+        <div className="hero" style={{ height: 200 }}><Media src={c.media[0]} alt={`Beeld van ${c.name}`} /><Back onClose={onClose} /></div>
         <div className="pad" style={{ paddingBottom: 8 }}>
           <h1 style={{ fontSize: 28 }}>{c.name}</h1>
           <p className="muted sm">{c.industry} · {c.city}</p>
@@ -401,10 +403,10 @@ function Company({ id, onClose, jobs, setJobId }) {
             <button className="li" key={j.id} onClick={() => setJobId(j.id)}><img className="thumb" src={j.photo} alt="" />
               <span className="grow"><b>{j.title}</b><br /><span className="sm muted">{j.city} · {rateText(j)}</span></span><span className="match">{j.m.score}%</span></button>
           ))}</div>}
-          {t === "projects" && <div className="portfolio">{c.media.map((m, i) => <figure key={m}><img src={m} alt="" /><figcaption>{["Jacket fabricage", "Offshore installatie", "Shutdown 2025"][i] || "Project"}</figcaption></figure>)}</div>}
+          {t === "projects" && <div className="portfolio">{c.media.map((m, i) => <figure key={m}><Media src={m} alt="" /><figcaption>{["Jacket fabricage", "Offshore installatie", "Shutdown 2025"][i] || "Project"}</figcaption></figure>)}</div>}
           {t === "people" && <div className="list">{c.people.map((x) => <div className="li" key={x.n}><span className="avatar">{initials(x.n)}</span><span><b>{x.n}</b><br /><span className="sm muted">{x.r}</span></span></div>)}</div>}
           {t === "workplace" && <ul className="reasons">{c.workplace.map((w) => <li key={w}><Buildings size={18} className="muted" />{w}</li>)}</ul>}
-          {t === "media" && <div className="portfolio">{c.media.map((m) => <figure key={m}><img src={m} alt={`Beeld van ${c.name}`} /></figure>)}</div>}
+          {t === "media" && <div className="portfolio">{c.media.map((m) => <figure key={m}><Media src={m} alt={`Beeld van ${c.name}`} /></figure>)}</div>}
         </div>
       </div>
     </div>

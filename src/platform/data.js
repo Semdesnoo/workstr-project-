@@ -64,7 +64,7 @@ export const companies = {
     about: "Marine contractor in offshore wind, olie & gas en waterbouw. Projecten wereldwijd vanuit Rotterdam.",
     people: [{ n: "Lotte Brink", r: "Recruiter technische functies" }, { n: "Ruben Hak", r: "QA/QC Lead" }],
     workplace: ["Projecten op zee, rotaties 14/14", "Eigen QA/QC-team van 40 inspecteurs", "Opleidingsbudget voor level 3"],
-    media: [img(2), img(6), img(4)],
+    media: ["./work/vanoord.mp4", img(2), img(6), img(4)],
   },
   rijnmond: {
     id: "rijnmond", name: "Rijnmond Process", city: "Schiedam", industry: "Petrochemie",
@@ -89,7 +89,7 @@ export const companies = {
 export const seedJobs = [
   {
     id: "j1", company: "vanoord", title: "NDT Inspector", city: "Rotterdam", rateMin: 45, rateMax: 60, unit: "uur",
-    contract: "freelance", start: d(21), duration: "6 maanden", sector: "Offshore", photo: img(2),
+    contract: "freelance", start: d(21), duration: "6 maanden", sector: "Offshore", photo: img(2), video: "./work/vanoord.mp4",
     skills: ["UT", "NDT", "Weld Inspection", "Offshore"], certs: ["UT2", "VCA", "BOSIET"],
     tasks: ["UT-inspecties op jacket-knooppunten", "Rapportage in client-format", "Afstemming met QA/QC Lead"],
     team: "QA/QC-team van 8, rotatie 14/14",

@@ -38,6 +38,12 @@ test("de loop: profiel in 4 stappen → project → interesse → bedrijf accept
   await page.getByRole("button", { name: "Goedkeuren en toevoegen" }).click();
 
   const card = page.getByRole("article", { name: "NDT Inspector bij Van Oord" });
+  await expect(card.locator("video")).toHaveAttribute("src", "./work/vanoord.mp4");
+  await expect(card.getByRole("button")).toHaveCount(4); // bedrijf, like, opslaan + infobalk — meer niet
+  await card.getByRole("button", { name: "Vind ik leuk" }).click();
+  await expect(card.getByRole("button", { name: "Vind ik niet meer leuk" })).toHaveAttribute("aria-pressed", "true");
+  await card.getByRole("button", { name: "Bewaar" }).click();
+  await expect(card.getByRole("button", { name: "Niet meer bewaren" })).toBeVisible();
   await card.getByRole("button", { name: /Bekijk vacature/ }).click();
   await expect(page.getByText("Waarom dit bij jou past")).toBeVisible();
   await page.getByRole("tab", { name: "Bedrijf" }).click();
@@ -159,6 +165,8 @@ test("bedrijf onboarding: account → profiel → contactpersoon → vacature �
   await page.getByRole("button", { name: "Volgende" }).click();
   await page.getByRole("button", { name: "Voorbeeld plakken" }).click();
   await page.getByRole("button", { name: "Zet in velden" }).click();
+  await page.locator("input[type=file]").setInputFiles("public/work/vanoord.mp4");
+  await expect(page.getByRole("button", { name: "Verwijder vacaturebeeld" }).locator("video")).toBeAttached();
   await page.getByRole("button", { name: /Publiceer en bekijk matches/ }).click();
   await expect(page.getByRole("heading", { name: "Goedemorgen, Noordzee Inspectie BV" })).toBeVisible();
   await expect(page.getByText("Maak je bedrijfsprofiel af")).toBeVisible(); // only 1 pluspunt
@@ -166,6 +174,7 @@ test("bedrijf onboarding: account → profiel → contactpersoon → vacature �
   await page.getByRole("link", { name: "App" }).click();
   await page.getByRole("button", { name: "Bekijk met demoprofiel (Sem)" }).click();
   const card = page.getByRole("article", { name: "NDT Inspector Monopiles bij Noordzee Inspectie BV" });
+  await expect(card.locator("video")).toHaveAttribute("src", /^blob:/); // uploaded video, read back from IndexedDB
   await card.getByRole("button", { name: /Bekijk vacature/ }).click();
   await page.getByRole("tab", { name: "Bedrijf" }).click();
   await expect(page.getByText("Eva de Wit · Recruiter")).toBeVisible();

@@ -6,7 +6,7 @@ import { companies, seedJobs, seedCandidates, CITIES } from "./data.js";
 import { matchJob, toProfile, structureVacancy, certStatus, experienceYears, AVAIL_LABEL, companyChecklist, completion } from "./logic.js";
 import { Checklist, Ring } from "./Candidate.jsx";
 import { showInterest, sendMessage, markRead, isMatch, findInterest, uid } from "./loop.js";
-import { Logo, StatusBadge, Reasons, initials } from "./ui.jsx";
+import { Logo, StatusBadge, Reasons, initials, Media, isVideo, saveMedia, MAX_VIDEO_MB } from "./ui.jsx";
 
 const CONTRACT = { freelance: "Freelance", project: "Project", vast: "Vast", parttime: "Parttime", fulltime: "Fulltime" };
 const EXAMPLE = "NDT Inspector Monopiles\nLocatie: Rotterdam. Freelance, €58 - €70 per uur.\n- UT en PAUT op monopile-lassen\n- Rapportage aan QA/QC Lead\nEisen: UT2, VCA, BOSIET";
@@ -96,8 +96,34 @@ function Dashboard({ co, jobs, ranked, incoming, matches, unread, who, store, se
   </>);
 }
 
-const makeJob = (v, co) => ({ ...v, id: uid(), company: co, rateMin: +v.rateMin, rateMax: +v.rateMax, start: v.start || new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
-  duration: "n.t.b.", photo: companies[co]?.media?.[0] || "./work/w1.jpg", team: "", tasks: v.tasks.length ? v.tasks : ["Zie gesprek"] });
+// Feed media: the vacancy's own upload first, else the company's first video/photo.
+const makeJob = ({ media, ...v }, co) => {
+  const all = [...(media ? [media] : []), ...(companies[co]?.media || [])];
+  return { ...v, id: uid(), company: co, rateMin: +v.rateMin, rateMax: +v.rateMax, start: v.start || new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
+    duration: "n.t.b.", photo: all.find((m) => !isVideo(m)) || "./work/w1.jpg", video: all.find(isVideo), team: "", tasks: v.tasks.length ? v.tasks : ["Zie gesprek"] };
+};
+// One file input for photo or video; errors (too big, wrong type) are shown, never swallowed.
+function MediaPick({ label, multiple, onAdd }) {
+  const [err, setErr] = useState("");
+  const pick = async (e) => {
+    setErr("");
+    const files = [...e.target.files]; e.target.value = "";
+    const out = [];
+    for (const f of files) { try { out.push(await saveMedia(f)); } catch (x) { setErr(x.message); } }
+    if (out.length) onAdd(out);
+  };
+  return (<span className="stack" style={{ gap: 4 }}>
+    <label className="btn sm" style={{ justifySelf: "start" }}><Camera size={16} />{label}<input type="file" accept="image/*,video/*" multiple={multiple} className="sr" onChange={pick} /></label>
+    <span className="xs muted">Foto of video (mp4/mov, max {MAX_VIDEO_MB} MB). Korte verticale video's werken het best in de feed.</span>
+    {err && <span className="xs" role="alert" style={{ color: "var(--err)" }}>{err}</span>}
+  </span>);
+}
+const VacancyMedia = ({ v, setV }) => (
+  <div className="f"><span>Foto of video bij deze vacature (optioneel — anders je bedrijfsbeeld)</span>
+    {v.media && <div className="photopick" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}><button type="button" aria-pressed aria-label="Verwijder vacaturebeeld" onClick={() => setV({ ...v, media: "" })}><Media src={v.media} alt="" /><X size={16} weight="bold" className="pick" /></button></div>}
+    <MediaPick label={v.media ? "Ander beeld" : "Video of foto toevoegen"} onAdd={([m]) => setV({ ...v, media: m })} />
+  </div>
+);
 
 function Vacancies({ co, jobs, ranked, update, open }) {
   const [raw, setRaw] = useState(null);
@@ -129,6 +155,7 @@ function Vacancies({ co, jobs, ranked, update, open }) {
       </div>
       <div className="row wrap"><span className="sm muted">Verplichte certificaten:</span>{v.certs.map((c) => <span key={c} className="chip">{c}</span>)}
         <span className="sm muted" style={{ marginLeft: 12 }}>Skills:</span>{v.skills.map((c) => <span key={c} className="chip">{c}</span>)}</div>
+      <VacancyMedia v={v} setV={setV} />
       <div className="row"><span className="grow" /><button className="btn" onClick={() => setV(null)}>Terug</button>
         <button className="btn primary" disabled={!v.title || !v.city || !v.contract} onClick={publish}>Publiceer</button></div>
     </section>}
@@ -244,8 +271,6 @@ function BizOnboarding({ update, onDone }) {
     onDone(company.id);
   };
   const toggleMedia = (m) => set("media", c.media.includes(m) ? c.media.filter((x) => x !== m) : [...c.media, m].slice(0, 6));
-  const upload = (e) => Promise.all([...e.target.files].map((file) => new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(file); })))
-    .then((urls) => set("media", [...c.media, ...urls].slice(0, 6)));
 
   return (
     <div className="bonb">
@@ -286,9 +311,9 @@ function BizOnboarding({ update, onDone }) {
               <span className="xs muted">{c.about.trim().length < 40 ? `Nog ${40 - c.about.trim().length} tekens` : "✓ Genoeg om een beeld te krijgen"}</span></label>
             <div className="f"><span>Wat maakt het werk goed? (bijv. rooster, team, opleiding)</span>
               {c.workplace.map((w, k) => <input key={k} className="in" aria-label={`Pluspunt ${k + 1}`} value={w} maxLength={80} onChange={(e) => set("workplace", c.workplace.map((x, n) => (n === k ? e.target.value : x)))} />)}</div>
-            <div className="f"><span>Werkplekfoto's · echte beelden werken het best ({c.media.length}/6)</span>
-              <div className="photopick">{[...new Set([...PHOTOS, ...c.media])].map((m) => <button key={m} type="button" aria-pressed={c.media.includes(m)} aria-label="Werkplekfoto" onClick={() => toggleMedia(m)}><img src={m} alt="" />{c.media.includes(m) && <Check size={16} weight="bold" className="pick" />}</button>)}</div>
-              <label className="btn sm" style={{ justifySelf: "start" }}><Camera size={16} />Eigen foto's uploaden<input type="file" accept="image/*" multiple className="sr" onChange={upload} /></label></div>
+            <div className="f"><span>Werkplekfoto's en video's · echte beelden werken het best ({c.media.length}/6)</span>
+              <div className="photopick">{[...new Set([...PHOTOS, ...c.media])].map((m) => <button key={m} type="button" aria-pressed={c.media.includes(m)} aria-label={isVideo(m) ? "Bedrijfsvideo" : "Werkplekfoto"} onClick={() => toggleMedia(m)}><Media src={m} alt="" />{c.media.includes(m) && <Check size={16} weight="bold" className="pick" />}</button>)}</div>
+              <MediaPick label="Eigen foto's of video's uploaden" multiple onAdd={(ms) => set("media", [...ms.filter(isVideo), ...c.media, ...ms.filter((m) => !isVideo(m))].slice(0, 6))} /></div>
           </>}
           {step === 2 && <>
             <h2 className="bh">Wie spreken professionals?</h2>
@@ -312,6 +337,7 @@ function BizOnboarding({ update, onDone }) {
               <label className="f">Tarief (€/{v.unit})<span className="row"><input className="in" type="number" aria-label="Tarief min" value={v.rateMin} onChange={(e) => setV({ ...v, rateMin: e.target.value })} />–<input className="in" type="number" aria-label="Tarief max" value={v.rateMax} onChange={(e) => setV({ ...v, rateMax: e.target.value })} /></span></label>
             </div>
             <div className="row wrap"><span className="sm muted">Verplicht:</span>{v.certs.map((x) => <span key={x} className="chip">{x}</span>)}<span className="sm muted" style={{ marginLeft: 12 }}>Skills:</span>{v.skills.map((x) => <span key={x} className="chip">{x}</span>)}</div>
+            <VacancyMedia v={v} setV={setV} />
             <button className="btn primary block" disabled={!v.title || !v.city || !v.contract} onClick={() => finish(true)}>Publiceer en bekijk matches <ArrowRight size={16} /></button>
           </>)}
           {step < 3 && <button className="btn primary block" disabled={!valid} onClick={() => setStep(step + 1)}>Volgende</button>}

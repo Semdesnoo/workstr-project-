@@ -159,7 +159,7 @@ button.chip.on { background: var(--text); color: var(--bg); border-color: var(--
 .tt { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; }
 .tt::-webkit-scrollbar { display: none; }
 .ttitem { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; background: #111216; }
-.ttitem > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ttitem > img, .ttitem > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .ttitem::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,.5) 0%, transparent 20%, transparent 50%, rgba(0,0,0,.5) 100%); }
 .ttempty { display: grid; place-items: center; padding: 24px; background: var(--bg); }
 .ttempty::after { display: none; }
@@ -168,16 +168,22 @@ button.chip.on { background: var(--text); color: var(--bg); border-color: var(--
 .tpills::-webkit-scrollbar { display: none; }
 .tttop .chip { flex: none; padding: 8px 13px; background: rgba(17,18,22,.62); color: #fff; box-shadow: none; border: 1px solid rgba(255,255,255,.24); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .tttop button.chip.on { background: #fff; color: #111216; }
-.rail { position: absolute; z-index: 3; right: 12px; bottom: calc(282px + env(safe-area-inset-bottom)); display: grid; gap: 16px; justify-items: center; }
-.rail button { display: grid; justify-items: center; gap: 4px; background: none; border: 0; padding: 0; color: #fff; font-size: 11px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
-.rail .rb { width: 50px; height: 50px; border-radius: 999px; display: grid; place-items: center; }
-.rail .rb.co { font-size: 14px; font-weight: 700; background: #fff; color: #111216; border: 0; }
+/* TikTok rail: company avatar, like, save — bare white icons with a shadow, no buttons-in-circles */
+.rail { position: absolute; z-index: 3; right: 10px; bottom: calc(292px + env(safe-area-inset-bottom)); display: grid; gap: 18px; justify-items: center; }
+.rail button { display: grid; justify-items: center; gap: 2px; min-width: 48px; background: none; border: 0; padding: 0; color: #fff; font-size: 12px; font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,.7); filter: drop-shadow(0 1px 3px rgba(0,0,0,.45)); }
+.rail button:active svg { transform: scale(.85); }
+.rail button.on:nth-child(2) svg { color: #fe2c55; }
+.rail button.on:nth-child(3) svg { color: #ffc83d; }
+.rail .co { width: 50px; height: 50px; border-radius: 999px; display: grid; place-items: center; font-size: 15px; font-weight: 700; background: #fff; color: #111216; border: 2px solid #fff; text-shadow: none; margin-bottom: 4px; }
+.media-loading { position: absolute; inset: 0; background: #111216; }
 .infobar { position: absolute; z-index: 3; left: 12px; right: 12px; bottom: calc(92px + env(safe-area-inset-bottom)); display: grid; gap: 6px; text-align: left;
   background: #fff; color: #111216; border: 0; border-radius: 28px; padding: 14px 16px 12px; box-shadow: 0 18px 40px rgba(0,0,0,.28); }
 .infobar .ib-title { font-size: 21px; letter-spacing: -0.03em; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ib-why { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ib-more { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); border-top: 1px solid var(--border); padding-top: 9px; margin-top: 2px; }
 .mediastrip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -18px; padding: 0 18px; }
-.mediastrip img { flex: none; width: 150px; height: 110px; object-fit: cover; border-radius: 16px; }
+.mediastrip img, .mediastrip video { flex: none; width: 150px; height: 110px; object-fit: cover; border-radius: 16px; }
 .sheet-backdrop { position: absolute; inset: 0; z-index: 25; background: rgba(17, 18, 22, .45); display: flex; align-items: flex-end; }
 .applysheet { width: 100%; max-height: 92%; overflow-y: auto; background: #fff; border-radius: 32px 32px 0 0; padding: 12px 20px calc(24px + env(safe-area-inset-bottom)); display: grid; gap: 12px; }
 .applysheet .handle { justify-self: center; width: 44px; height: 5px; border-radius: 9px; background: #cfd2d8; }
@@ -186,13 +192,13 @@ button.chip.on { background: var(--text); color: var(--bg); border-color: var(--
 .iphone:has(.tt):not(:has(.overlay)) .statusbar { color: #fff; }
 .iphone .tttop { top: 56px; }
 .iphone .infobar { bottom: 100px; }
-.iphone .rail { bottom: 290px; }
+.iphone .rail { bottom: 300px; }
 .iphone .applysheet { padding-bottom: 34px; }
 
 /* Job detail: photo + white sheet */
 .appwide .overlay { background: var(--bg); }
 .dhero { position: relative; height: 340px; flex: none; }
-.dhero img { width: 100%; height: 100%; object-fit: cover; }
+.dhero img, .dhero video { width: 100%; height: 100%; object-fit: cover; }
 .dhero .icon-btn { position: absolute; top: 16px; z-index: 2; width: 46px; height: 46px; }
 .sheet { position: relative; margin-top: -40px; background: var(--bg); border-radius: 32px 32px 0 0; padding: 12px 18px 120px; display: grid; gap: 16px; }
 .sheet .handle { justify-self: center; width: 44px; height: 5px; border-radius: 9px; background: #cfd2d8; }
@@ -252,7 +258,7 @@ button.chip.on { background: var(--text); color: var(--bg); border-color: var(--
 /* Sheets & overlays */
 .overlay { position: absolute; inset: 0; background: var(--bg); z-index: 20; display: flex; flex-direction: column; }
 .hero { height: 260px; position: relative; flex: none; }
-.hero img { width: 100%; height: 100%; object-fit: cover; }
+.hero img, .hero video { width: 100%; height: 100%; object-fit: cover; }
 .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 40%, var(--bg)); }
 .hero .icon-btn { position: absolute; top: 14px; left: 14px; z-index: 2; }
 .factgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -276,7 +282,7 @@ button.chip.on { background: var(--text); color: var(--bg); border-color: var(--
 .avatar.lg { width: 72px; height: 72px; font-size: 24px; background: var(--cta); border: 0; color: #fff; }
 .portfolio { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .portfolio figure { margin: 0; border-radius: 12px; overflow: hidden; background: var(--surface); border: 1px solid var(--border); }
-.portfolio img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+.portfolio img, .portfolio video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
 .portfolio figcaption { padding: 8px 10px; font-size: 13px; font-weight: 600; }
 .create-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .create-grid button { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; text-align: left; display: grid; gap: 10px; color: var(--text); }
@@ -400,7 +406,7 @@ table.t { width: 100%; border-collapse: collapse; font-size: 14px; }
 .photopick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .photopick button { position: relative; padding: 0; border: 2px solid transparent; border-radius: 14px; overflow: hidden; aspect-ratio: 1; background: none; opacity: .55; }
 .photopick button[aria-pressed="true"] { border-color: var(--primary); opacity: 1; }
-.photopick img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photopick img, .photopick video { width: 100%; height: 100%; object-fit: cover; display: block; }
 .photopick .pick { position: absolute; top: 6px; right: 6px; background: var(--cta); color: #fff; border-radius: 99px; padding: 2px; }
 @media (max-width: 900px) {
   .bonb { grid-template-columns: 1fr; }
