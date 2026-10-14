@@ -6,7 +6,7 @@ import {
 } from "@phosphor-icons/react";
 import { showInterest, sendMessage, markRead, decline, isMatch, findInterest } from "./loop.js";
 import { companies, seedJobs, CITIES } from "./data.js";
-import { matchJob, certStatus, structureProject, daysLeft, AVAIL_LABEL, CERT_WORDS } from "./logic.js";
+import { matchJob, certStatus, structureProject, daysLeft, AVAIL_LABEL, CERT_WORDS, profileChecklist, completion } from "./logic.js";
 import { Logo, Reasons, StatusBadge, initials } from "./ui.jsx";
 
 const CONTRACT = { freelance: "Freelance", project: "Project", vast: "Vast", parttime: "Parttime", fulltime: "Fulltime" };
@@ -24,11 +24,11 @@ async function toDataUrl(file, max = 720) {
   return c.toDataURL("image/jpeg", 0.72);
 }
 
-export function profileCompletion(p) {
-  const checks = [p.photo, p.about, p.projects.length, p.experience.length || p.years, p.skills.length >= 3, p.certs.length,
-    p.availability, p.projects.some((x) => x.photos?.length)];
-  return Math.round((100 * checks.filter(Boolean).length) / checks.length);
-}
+export const Checklist = ({ items }) => (
+  <ul className="checklist">{items.map((i) => <li key={i.label} className={i.done ? "" : "todo"}>
+    {i.done ? <Check size={18} weight="bold" className="ok" /> : <span className="todo-dot" aria-hidden />}{i.label}<span className="sr">{i.done ? " (klaar)" : " (nog te doen)"}</span></li>)}</ul>
+);
+export const Ring = ({ pct, label = "compleet" }) => <div className="ring" style={{ "--p": pct }} role="img" aria-label={`${pct}% ${label}`}><b>{pct}%</b></div>;
 
 export default function Candidate({ store, update }) {
   const [tab, setTab] = useState("discover");
@@ -123,39 +123,50 @@ const SKILL_SUGGEST = ["UT", "PAUT", "MT", "PT", "VT", "NDT", "ToFD", "Weld Insp
 const blankProfile = () => ({ name: "", photo: "", headline: "", city: "Rotterdam", about: "", years: 0, skills: [], sectors: [], availability: "now", availableFrom: "",
   radiusKm: 80, minRate: 45, contracts: ["freelance"], certs: [], experience: [], education: [], projects: [], discoverable: true });
 
+const SECTORS = ["Offshore & wind", "Energie", "Petrochemie", "Staalbouw", "Maritiem", "Industrie", "Bouw"];
+const PLAN = [
+  [User, "Wie ben je", "Foto, naam, vak en woonplaats"],
+  [Wrench, "Ervaring", "Jaren, skills en sectoren — hier draait matching op"],
+  [Certificate, "Certificaten", "Met geldigheid: verlopen of ontbrekend = geen match"],
+  [SlidersHorizontal, "Wat zoek je", "Beschikbaarheid, contract, tarief en reisafstand"],
+  [ChatCircle, "Over jou", "Twee zinnen en of bedrijven je mogen vinden"],
+  [Camera, "Eerste project", "Foto + één zin — je sterkste bewijs"],
+];
+
 function Onboarding({ store, update }) {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(-2); // -2 splash · -1 plan · 0..4 wizard · 5 klaar
   const [f, setF] = useState(blankProfile);
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const toggle = (k, v) => set(k, f[k].includes(v) ? f[k].filter((x) => x !== v) : [...f[k], v]);
   const finish = (project) => {
-    const { started, ...profile } = f;
-    update((s) => ({ ...s, onboarded: true, profile, dismissed: [], saved: [], interests: (s.interests || []).filter((i) => i.person !== "me") }));
+    update((s) => ({ ...s, onboarded: true, profile: f, dismissed: [], saved: [], interests: (s.interests || []).filter((i) => i.person !== "me") }));
     if (project) setTimeout(() => document.dispatchEvent(new CustomEvent("workstr:create", { detail: "project" })));
   };
   const useDemo = () => update((s) => ({ ...s, onboarded: true }));
   const year = new Date(Date.now() + 365 * 864e5).toISOString().slice(0, 10);
-  const steps = ["Wie ben je", "Ervaring", "Certificaten", "Voorkeuren"];
-  const valid = [f.name.trim() && f.headline.trim(), f.skills.length > 0, true, f.contracts.length > 0][step];
+  const valid = [f.name.trim() && f.headline.trim(), f.skills.length > 0, true, f.contracts.length > 0, true][step];
+  const items = profileChecklist(f);
 
-  if (step === 0 && !f.started) return (
+  if (step === -2) return (
     <div className="onb">
       <div className="onb-art" aria-hidden>
         <div className="bubble" style={{ width: 150, height: 150, left: "10%", top: "14%", "--ring": "#c9c7ff" }}><img src="./work/w2.jpg" alt="" /></div>
         <div className="bubble" style={{ width: 112, height: 112, right: "12%", top: "8%", "--ring": "#ffe2a8" }}><img src="./work/w5.jpg" alt="" /></div>
-        <div className="bubble" style={{ width: 124, height: 124, left: "38%", top: "44%", "--ring": "#bdf0d2" }}><img src="./work/w7.jpg" alt="" /></div>
-        <span className="pillname glass" style={{ left: "44%", top: "33%" }}>UT2 · Offshore</span>
+        <div className="bubble" style={{ width: 124, height: 124, left: "38%", top: "40%", "--ring": "#bdf0d2" }}><img src="./work/w7.jpg" alt="" /></div>
+        <span className="pillname glass" style={{ left: "44%", top: "30%" }}>UT2 · Offshore</span>
         <span className="dotb" style={{ width: 22, height: 22, left: "6%", top: "58%", background: "#c9c7ff" }} />
         <span className="dotb" style={{ width: 12, height: 12, right: "18%", top: "52%", background: "#bdf0d2" }} />
         <span className="dotb" style={{ width: 34, height: 34, right: "-10px", top: "30%", background: "#7c78ff" }} />
-        <span className="dotb" style={{ width: 10, height: 10, left: "30%", top: "8%", background: "#ffe2a8" }} />
         <h1>Less searching.<br />More working.</h1>
       </div>
       <div>
         <div className="onb-sheet">
           <Logo size={24} />
-          <p className="muted">Eén levend Work Profile met je projecten, skills en certificaten. Werk komt naar jou toe — en je ziet altijd waarom het past.</p>
-          <button className="btn primary block" onClick={() => set("started", true)}>Maak je Work Profile</button>
+          <p className="muted sm">Hoe wil je Workstr gebruiken?</p>
+          <button className="rolecard dark" onClick={() => setStep(-1)}><span className="ri"><Wrench size={22} /></span>
+            <span><b>Ik zoek werk</b><small>Maak je Work Profile · ±5 min</small></span><ArrowRight size={20} /></button>
+          <button className="rolecard" onClick={() => { location.hash = "#/business"; }}><span className="ri"><Buildings size={22} /></span>
+            <span><b>Ik zoek personeel</b><small>Workstr Business voor bedrijven</small></span><ArrowRight size={20} /></button>
           <button className="btn ghost block" onClick={useDemo}>Bekijk met demoprofiel (Sem)</button>
         </div>
       </div>
@@ -163,24 +174,34 @@ function Onboarding({ store, update }) {
   );
   return (
     <div className="app">
-      <div className="top"><button className="icon-btn" aria-label="Terug" onClick={() => (step ? setStep(step - 1) : set("started", false))}><ArrowLeft size={20} /></button>
-        <span className="sm muted">Stap {Math.min(step + 1, 4)} van 4 · {steps[step] || "Klaar"}</span><span style={{ width: 44 }} /></div>
-      <div className="bar" style={{ margin: "0 18px" }}><i style={{ width: `${(Math.min(step + 1, 4) / 4) * 100}%` }} /></div>
+      <div className="top"><button className="icon-btn" aria-label="Terug" onClick={() => setStep(step - 1)}><ArrowLeft size={20} /></button>
+        <span className="sm muted">{step < 0 ? "Je Work Profile" : step < 5 ? `Stap ${step + 1} van 6 · ${PLAN[step][1]}` : "Stap 6 van 6 · Eerste project"}</span><span style={{ width: 44 }} /></div>
+      {step >= 0 && <div className="segbar" aria-hidden>{PLAN.map((_, k) => <i key={k} className={k <= step ? "on" : ""} />)}</div>}
       <div className="screen"><div className="pad stack">
+        {step === -1 && <>
+          <h1 className="h-xl">Zo bouw je een sterk profiel</h1>
+          <p className="muted">6 korte stappen, ±5 minuten. Hoe completer je profiel, hoe beter je matches — en bedrijven zien meteen wat je kunt.</p>
+          <ol className="plan">{PLAN.map(([I, t, d], k) => <li key={t}><span className="pnum">{k + 1}</span><span><b>{t}</b><br /><span className="sm muted">{d}</span></span><I size={20} className="muted" /></li>)}</ol>
+          <div className="ai-note"><Sparkle size={18} />AI helpt structureren, maar verzint nooit ervaring. Jij keurt alles goed.</div>
+          <button className="btn primary block" onClick={() => setStep(0)}>Start met stap 1</button>
+        </>}
         {step === 0 && <>
           <h1 className="h-xl">Wie ben je?</h1>
           <label className="row" style={{ cursor: "pointer" }}><Avatar p={f} lg /><span className="btn sm"><Camera size={16} />{f.photo ? "Andere foto" : "Profielfoto"}</span>
             <input type="file" accept="image/*" className="sr" aria-label="Profielfoto" onChange={async (e) => e.target.files[0] && set("photo", await toDataUrl(e.target.files[0], 320))} /></label>
+          <p className="xs muted" style={{ marginTop: -6 }}>Een foto maakt je herkenbaar in de chat met bedrijven.</p>
           <label className="f">Naam<input className="in" autoComplete="name" value={f.name} onChange={(e) => set("name", e.target.value)} /></label>
           <label className="f">Functie of richting<input className="in" placeholder="Bijv. NDT Inspector · UT2" value={f.headline} onChange={(e) => set("headline", e.target.value)} /></label>
           <label className="f">Woonplaats<select className="in" value={f.city} onChange={(e) => set("city", e.target.value)}>{Object.keys(CITIES).map((c) => <option key={c}>{c}</option>)}</select></label>
         </>}
         {step === 1 && <>
           <h1 className="h-xl">Wat kun je?</h1>
-          <label className="f">Jaren werkervaring in je vak<input className="in" type="number" min="0" max="50" value={f.years} onChange={(e) => set("years", Math.max(0, +e.target.value))} /></label>
-          <div className="f"><span>Tik je skills aan</span>
+          <label className="f">Jaren werkervaring in je vak<input className="in" type="number" min="0" max="50" value={f.years} onChange={(e) => set("years", Math.min(50, Math.max(0, +e.target.value)))} /></label>
+          <div className="f"><span>Tik je skills aan <span className="muted">· minstens 3 voor goede matches</span></span>
             <div className="row wrap">{SKILL_SUGGEST.map((x) => <button key={x} type="button" className={`chip ${f.skills.includes(x) ? "on" : ""}`} aria-pressed={f.skills.includes(x)} onClick={() => toggle("skills", x)}>{x}</button>)}</div></div>
           <div className="f"><span>Andere skill</span><SkillPicker value={f.skills.filter((x) => !SKILL_SUGGEST.includes(x))} onChange={(v) => set("skills", [...f.skills.filter((x) => SKILL_SUGGEST.includes(x)), ...v])} /></div>
+          <div className="f"><span>Sectoren waarin je gewerkt hebt</span>
+            <div className="row wrap">{SECTORS.map((x) => <button key={x} type="button" className={`chip ${f.sectors.includes(x) ? "on" : ""}`} aria-pressed={f.sectors.includes(x)} onClick={() => toggle("sectors", x)}>{x}</button>)}</div></div>
         </>}
         {step === 2 && <>
           <h1 className="h-xl">Certificaten</h1>
@@ -194,17 +215,26 @@ function Onboarding({ store, update }) {
           <h1 className="h-xl">Wat zoek je?</h1>
           <div className="f"><span>Beschikbaar</span><div className="row wrap">{Object.entries(AVAIL_LABEL).filter(([k]) => k !== "date").map(([k, l]) => <button key={k} type="button" className={`chip ${f.availability === k ? "on" : ""}`} aria-pressed={f.availability === k} onClick={() => set("availability", k)}>{l}</button>)}</div></div>
           <div className="f"><span>Contractvorm</span><div className="row wrap">{Object.entries(CONTRACT).map(([k, l]) => <button key={k} type="button" className={`chip ${f.contracts.includes(k) ? "on" : ""}`} aria-pressed={f.contracts.includes(k)} onClick={() => toggle("contracts", k)}>{l}</button>)}</div></div>
-          <label className="f">Minimum uurtarief (€)<input className="in" type="number" min="0" value={f.minRate} onChange={(e) => set("minRate", +e.target.value)} /></label>
+          <label className="f">Minimum uurtarief (€)<input className="in" type="number" min="0" max="500" value={f.minRate} onChange={(e) => set("minRate", Math.min(500, Math.max(0, +e.target.value)))} /></label>
           <label className="f">Reisafstand: {f.radiusKm} km<input type="range" min="10" max="300" step="10" value={f.radiusKm} onChange={(e) => set("radiusKm", +e.target.value)} /></label>
-          <label className="f">Korte introductie<textarea className="in" style={{ minHeight: 80 }} placeholder="Wie ben je als vakman? Twee zinnen is genoeg." value={f.about} onChange={(e) => set("about", e.target.value)} /></label>
         </>}
         {step === 4 && <>
+          <h1 className="h-xl">Over jou</h1>
+          <label className="f">Korte introductie<textarea className="in" style={{ minHeight: 100 }} maxLength={400} placeholder="Wie ben je als vakman? Twee zinnen is genoeg." value={f.about} onChange={(e) => set("about", e.target.value)} /></label>
+          <button type="button" className="card row" style={{ textAlign: "left" }} aria-pressed={f.discoverable} onClick={() => set("discoverable", !f.discoverable)}>
+            {f.discoverable ? <Eye size={22} /> : <EyeSlash size={22} />}
+            <span className="grow"><b>{f.discoverable ? "Bedrijven mogen mij vinden" : "Alleen zichtbaar na mijn interesse"}</b><br /><span className="xs muted">Altijd later aan te passen in je profiel.</span></span>
+            <span className="chip">{f.discoverable ? "Aan" : "Uit"}</span></button>
+        </>}
+        {step === 5 && <>
           <h1 className="h-xl">Je Work Profile staat.</h1>
+          <Ring pct={completion(items)} />
+          <Checklist items={items} />
           <p className="muted">Laat nu zien wat je echt gedaan hebt. Eén project met een foto zegt meer dan “{f.years || 5} jaar ervaring”.</p>
           <button className="btn primary block" onClick={() => finish(true)}><Camera size={18} />Voeg je eerste project toe</button>
           <button className="btn ghost block" onClick={() => finish(false)}>Eerst vacatures bekijken</button>
         </>}
-        {step < 4 && <button className="btn primary block" disabled={!valid} onClick={() => setStep(step + 1)}>{step === 3 ? "Profiel afronden" : "Volgende"}</button>}
+        {step >= 0 && step < 5 && <button className="btn primary block" disabled={!valid} onClick={() => setStep(step + 1)}>{step === 4 ? "Profiel afronden" : "Volgende"}</button>}
       </div></div>
     </div>
   );
@@ -593,7 +623,9 @@ function Chat({ id, onClose, store, update, byId }) {
 }
 
 function Profile({ p, setCreate, setCv, setPrefs, update }) {
-  const pct = profileCompletion(p);
+  const items = profileChecklist(p);
+  const pct = completion(items);
+  const next = items.find((i) => !i.done);
   return (
     <div className="pad stack" style={{ gap: 20 }}>
       <div className="row between"><Logo /><a className="chip" href="#/business">Voor bedrijven</a></div>
@@ -609,6 +641,7 @@ function Profile({ p, setCreate, setCv, setPrefs, update }) {
       <div className="stack" style={{ gap: 6 }}>
         <div className="row between sm"><span>Work Profile {pct}% compleet</span><span className="muted">Workstr Passport</span></div>
         <div className="bar"><i style={{ width: `${pct}%` }} /></div>
+        {next && <span className="xs muted">Volgende stap voor een sterker profiel: <b style={{ color: "var(--text)" }}>{next.label}</b></span>}
       </div>
       <button className="card row" style={{ textAlign: "left" }} aria-pressed={!!p.discoverable} onClick={() => update((s) => ({ ...s, profile: { ...s.profile, discoverable: !s.profile.discoverable } }))}>
         {p.discoverable ? <Eye size={22} /> : <EyeSlash size={22} />}

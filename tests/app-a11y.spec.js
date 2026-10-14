@@ -11,8 +11,11 @@ test("app a11y (licht thema)", async ({ page }) => {
     return r.violations.map((v) => `${label} ${v.id}: ${v.nodes.slice(0, 4).map((n) => n.target).join(" | ")}`);
   };
   const out = [...await scan("splash")];
-  await page.getByRole("button", { name: "Maak je Work Profile" }).click();
+  await page.getByRole("button", { name: /Maak je Work Profile/ }).click();
+  out.push(...await scan("plan"));
+  await page.getByRole("button", { name: "Start met stap 1" }).click();
   out.push(...await scan("wizard"));
+  await page.getByRole("button", { name: "Terug" }).click();
   await page.getByRole("button", { name: "Terug" }).click();
   await page.getByRole("button", { name: "Bekijk met demoprofiel (Sem)" }).click();
   out.push(...await scan("discover"));

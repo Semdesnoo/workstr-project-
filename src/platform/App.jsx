@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CellSignalFull, WifiHigh, BatteryFull } from "@phosphor-icons/react";
-import { me, seedRequests, seedTimesheets, seedAgentLog, seedApprovals } from "./data.js";
+import { me, companies, seedRequests, seedTimesheets, seedAgentLog, seedApprovals } from "./data.js";
 import Candidate from "./Candidate.jsx";
 import Biz from "./Biz.jsx";
 import { Msp } from "./Desk.jsx";
@@ -31,6 +31,8 @@ const read = () => { const h = location.hash.slice(2); return [...SURFACES.map((
 export default function Platform() {
   const [store, update] = useStore();
   const [surface, setSurface] = useState(read);
+  // ponytail: registered company is merged into the shared seed map so app + business read one source; move to the DB in week 4.
+  if (store.company) companies[store.company.id] = store.company;
   useEffect(() => { const on = () => setSurface(read()); addEventListener("hashchange", on); return () => removeEventListener("hashchange", on); }, []);
   useEffect(() => { document.title = { app: "Workstr", business: "Workstr Business", managed: "Workstr Managed", ats: "Workstr ATS" }[surface]; }, [surface]);
 

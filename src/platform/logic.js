@@ -182,3 +182,29 @@ export function timesheetIssues(ts, contractRate) {
 export const toProfile = (c) => ({ ...c, radiusKm: 150, minRate: 0, contracts: ["freelance", "project", "vast"], projects: c.projects || [] });
 
 export const eur = (n) => "€" + n.toLocaleString("nl-NL");
+
+// What makes a profile "good": each item is something matching or an employer actually uses.
+export function profileChecklist(p) {
+  return [
+    ["Profielfoto", !!p.photo],
+    ["Functie en woonplaats", !!(p.headline && p.city)],
+    ["Minstens 3 skills", (p.skills || []).length >= 3],
+    ["Werkervaring", !!((p.experience || []).length || p.years)],
+    ["Certificaat met geldigheid", (p.certs || []).some((c) => c.validUntil)],
+    ["Beschikbaarheid en voorkeuren", !!(p.availability && (p.contracts || []).length)],
+    ["Korte introductie", !!(p.about || "").trim()],
+    ["Project met foto", (p.projects || []).some((x) => x.photos?.length)],
+  ].map(([label, done]) => ({ label, done }));
+}
+export function companyChecklist(c, jobs = []) {
+  return [
+    ["Bedrijfsnaam en vestiging", !!(c.name && c.city)],
+    ["Sector", !!c.industry],
+    ["Over het bedrijf (40+ tekens)", (c.about || "").trim().length >= 40],
+    ["Minstens 2 werkplekfoto's", (c.media || []).length >= 2],
+    ["Wat het werk goed maakt", (c.workplace || []).filter(Boolean).length >= 2],
+    ["Contactpersoon", (c.people || []).some((x) => x.n)],
+    ["Eerste vacature", jobs.length > 0],
+  ].map(([label, done]) => ({ label, done }));
+}
+export const completion = (items) => Math.round((100 * items.filter((i) => i.done).length) / items.length);

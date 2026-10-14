@@ -1,7 +1,7 @@
 // Run: node --test src/platform
 import test from "node:test";
 import assert from "node:assert/strict";
-import { certStatus, matchJob, structureProject, structureVacancy, timesheetIssues, compliance, km, CAP, experienceYears } from "./logic.js";
+import { certStatus, matchJob, structureProject, structureVacancy, timesheetIssues, compliance, km, CAP, experienceYears, profileChecklist, companyChecklist, completion } from "./logic.js";
 import { me, seedJobs, workers, REQUIRED_DOCS } from "./data.js";
 
 const now = new Date("2026-10-12");
@@ -71,4 +71,15 @@ test("compliance pct", () => {
   const c = compliance(workers[0], REQUIRED_DOCS);
   assert.equal(c.pct, 80); // induction missing, medical expiring still counts
   assert.equal(c.items.find((i) => i.name === "Client induction").status, "missing");
+});
+
+test("profile + company checklists", () => {
+  const empty = { name: "", headline: "", city: "", skills: [], certs: [], experience: [], projects: [], contracts: [] };
+  assert.equal(completion(profileChecklist(empty)), 0);
+  const full = completion(profileChecklist({ ...me, photo: "x", about: "Hoi", projects: [{ photos: ["a"] }] }));
+  assert.equal(full, 100);
+  const c = { name: "Test BV", city: "Rotterdam", industry: "Staalbouw", about: "x".repeat(40), media: ["a", "b"], workplace: ["a", ""], people: [{ n: "Ann" }] };
+  const items = companyChecklist(c, []);
+  assert.deepEqual(items.filter((i) => !i.done).map((i) => i.label), ["Wat het werk goed maakt", "Eerste vacature"]);
+  assert.equal(completion(companyChecklist({ ...c, workplace: ["a", "b"] }, [{}])), 100);
 });

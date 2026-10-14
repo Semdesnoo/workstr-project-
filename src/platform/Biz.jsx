@@ -1,9 +1,10 @@
 // Workstr Business — prototype. Exactly five things: post a vacancy → see matches → open a
 // Work Profile → show interest → chat. Same local store and loop as the candidate app.
 import React, { useEffect, useRef, useState } from "react";
-import { SquaresFour, Briefcase, ChatCircle, Plus, Lightning, Sparkle, Check, X, MapPin, Certificate, Camera, ArrowLeft } from "@phosphor-icons/react";
+import { SquaresFour, Briefcase, ChatCircle, Plus, Lightning, Sparkle, Check, X, MapPin, Certificate, Camera, ArrowLeft, ArrowRight, Buildings, UsersThree, MagnifyingGlass } from "@phosphor-icons/react";
 import { companies, seedJobs, seedCandidates, CITIES } from "./data.js";
-import { matchJob, toProfile, structureVacancy, certStatus, experienceYears, AVAIL_LABEL } from "./logic.js";
+import { matchJob, toProfile, structureVacancy, certStatus, experienceYears, AVAIL_LABEL, companyChecklist, completion } from "./logic.js";
+import { Checklist, Ring } from "./Candidate.jsx";
 import { showInterest, sendMessage, markRead, isMatch, findInterest, uid } from "./loop.js";
 import { Logo, StatusBadge, Reasons, initials } from "./ui.jsx";
 
@@ -21,7 +22,7 @@ export function people(store) {
 const forEmployer = (r) => ({ ...r, text: r.text.replace(/^Je hebt /, "Heeft ").replace("binnen je radius", "binnen de radius van de kandidaat").replace("je voorkeur", "de voorkeur van de kandidaat").replace(/^Je staat/, "Staat").replace("je beschikbaarheid", "de beschikbaarheid").replace("je minimum", "het minimum").replace("Je hebt", "Heeft").replace("je projecten", "de projecten").replace(" — verplicht voor deze functie", " (verplicht)").replace("je voorkeuren", "de voorkeuren") });
 
 export default function Biz({ store, update }) {
-  const [co, setCo] = useState("vanoord");
+  const [co, setCo] = useState(store.company?.id || "vanoord");
   const [page, setPage] = useState("dashboard");
   const [jobId, setJobId] = useState(null);
   const [person, setPerson] = useState(null);
@@ -46,6 +47,8 @@ export default function Biz({ store, update }) {
   };
   const openChat = (id) => { update((s) => markRead(s, id, "co")); setChat(id); setPerson(null); setJobId(null); setPage("berichten"); };
   const go = (p) => { setPage(p); setJobId(null); setPerson(null); };
+
+  if (!store.company && !store.bizDemo) return <BizOnboarding update={update} onDone={(id) => setCo(id)} />;
 
   const nav = [["dashboard", "Dashboard", SquaresFour, 0], ["vacatures", "Vacatures", Briefcase, jobs.length], ["berichten", "Berichten", ChatCircle, unread]];
   return (
@@ -74,6 +77,10 @@ function Dashboard({ co, jobs, ranked, incoming, matches, unread, who, store, se
   const fresh = jobs.reduce((n, j) => n + ranked(j).filter(({ m, x }) => m.score >= 70 && !findInterest(store, j.id, x.id)).length, 0);
   return (<>
     <header><div><h1>Goedemorgen, {companies[co].name}</h1><p className="muted">Wie past, wie wil jou spreken, en met wie praat je al.</p></div></header>
+    {companies[co].own && completion(companyChecklist(companies[co], jobs)) < 100 && <section className="card row" style={{ marginBottom: 16, gap: 20 }}>
+      <Ring pct={completion(companyChecklist(companies[co], jobs))} label="bedrijfsprofiel" />
+      <div className="grow stack" style={{ gap: 8 }}><b>Maak je bedrijfsprofiel af</b><span className="sm muted">Professionals zien dit als ze op jouw vacature tikken.</span><Checklist items={companyChecklist(companies[co], jobs)} /></div>
+    </section>}
     <div className="kpis"><Kpi label="Open vacatures" value={jobs.length} /><Kpi label="Nieuwe matches" value={fresh} /><Kpi label="Nieuwe berichten" value={unread} /><Kpi label="Lopende gesprekken" value={matches.length} /></div>
     <div className="cols even">
       <section className="card stack"><h3 className="sec-title">Sollicitaties ontvangen</h3>
@@ -89,15 +96,17 @@ function Dashboard({ co, jobs, ranked, incoming, matches, unread, who, store, se
   </>);
 }
 
+const makeJob = (v, co) => ({ ...v, id: uid(), company: co, rateMin: +v.rateMin, rateMax: +v.rateMax, start: v.start || new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
+  duration: "n.t.b.", photo: companies[co]?.media?.[0] || "./work/w1.jpg", team: "", tasks: v.tasks.length ? v.tasks : ["Zie gesprek"] });
+
 function Vacancies({ co, jobs, ranked, update, open }) {
   const [raw, setRaw] = useState(null);
   const [v, setV] = useState(null);
   const set = (k) => (e) => setV({ ...v, [k]: e.target.value });
   const publish = () => {
-    const id = uid();
-    update((s) => ({ ...s, jobs: [{ ...v, id, company: co, rateMin: +v.rateMin, rateMax: +v.rateMax, start: v.start || new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10),
-      duration: "n.t.b.", photo: companies[co].media[0], team: "", tasks: v.tasks.length ? v.tasks : ["Zie gesprek"] }, ...s.jobs] }));
-    setRaw(null); setV(null); open(id);
+    const job = makeJob(v, co);
+    update((s) => ({ ...s, jobs: [job, ...s.jobs] }));
+    setRaw(null); setV(null); open(job.id);
   };
   return (<>
     <header><div><h1>Vacatures</h1><p className="muted">Plak je vacaturetekst. Workstr zet hem in velden; jij controleert en publiceert.</p></div>
@@ -212,4 +221,102 @@ function Messages({ matches, jobs, who, store, update, chat, setChat }) {
       </section> : <section className="card muted">Kies een gesprek.</section>}
     </div>
   </>);
+}
+
+// ---- Company onboarding: account → profile → contact → first vacancy -------------------
+const INDUSTRIES = ["Offshore & marine", "Energie", "Petrochemie", "Staalbouw", "Bouw & infra", "Industrie & maintenance", "Werving & selectie"];
+const SIZES = ["1–10", "11–50", "51–250", "250+"];
+const PHOTOS = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `./work/w${n}.jpg`);
+const BSTEPS = ["Bedrijf", "Bedrijfsprofiel", "Contactpersoon", "Eerste vacature"];
+
+function BizOnboarding({ update, onDone }) {
+  const [step, setStep] = useState(-1);
+  const [c, setC] = useState({ id: "own", own: true, name: "", kvk: "", industry: "", city: "Rotterdam", size: "", about: "", workplace: ["", "", ""], media: [PHOTOS[0], PHOTOS[5]], people: [{ n: "", r: "Recruiter" }] });
+  const [raw, setRaw] = useState("");
+  const [v, setV] = useState(null);
+  const set = (k, val) => setC((x) => ({ ...x, [k]: val }));
+  const kvkOk = c.kvk === "" || /^\d{8}$/.test(c.kvk);
+  const valid = [c.name.trim().length >= 2 && c.industry && kvkOk, c.about.trim().length >= 40 && c.media.length >= 1, c.people[0].n.trim().length >= 2, true][step];
+  const finish = (withJob) => {
+    const company = { ...c, name: c.name.trim(), workplace: c.workplace.map((w) => w.trim()).filter(Boolean) };
+    companies[company.id] = company; // makeJob reads the photo from here
+    update((s) => ({ ...s, company, jobs: withJob ? [makeJob(v, company.id), ...s.jobs] : s.jobs }));
+    onDone(company.id);
+  };
+  const toggleMedia = (m) => set("media", c.media.includes(m) ? c.media.filter((x) => x !== m) : [...c.media, m].slice(0, 6));
+  const upload = (e) => Promise.all([...e.target.files].map((file) => new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(file); })))
+    .then((urls) => set("media", [...c.media, ...urls].slice(0, 6)));
+
+  return (
+    <div className="bonb">
+      <aside className="bonb-art">
+        <div className="collage" aria-hidden>{[2, 5, 7, 6].map((n) => <img key={n} src={`./work/w${n}.jpg`} alt="" />)}</div>
+        <Logo sub="Business" />
+        <h1>Vind vakmensen die laten zien wat ze kunnen.</h1>
+        <p className="muted">Geen stapel cv's. Work Profiles met projecten, certificaten en een uitleg waarom iemand past.</p>
+      </aside>
+      <main className="bonb-form">
+        {step === -1 ? <>
+          <h2 style={{ fontSize: 32, letterSpacing: "-0.03em" }}>Start met Workstr Business</h2>
+          <p className="muted">In 4 stappen van account naar je eerste matches. ±5 minuten.</p>
+          <ol className="plan">{BSTEPS.map((t, k) => <li key={t}><span className="pnum">{k + 1}</span><span><b>{t}</b><br /><span className="sm muted">{[
+            "Naam, sector en vestiging", "Over jullie, werkplekfoto's en wat het werk goed maakt — dit zien professionals", "Wie professionals spreken in de chat", "Plak je tekst, Workstr zet hem in velden, jij controleert"][k]}</span></span>
+            {[<Buildings key="a" size={20} />, <Camera key="b" size={20} />, <UsersThree key="c" size={20} />, <MagnifyingGlass key="d" size={20} />][k]}</li>)}</ol>
+          <button className="btn primary block" onClick={() => setStep(0)}>Maak bedrijfsaccount</button>
+          <button className="btn ghost block" onClick={() => update((s) => ({ ...s, bizDemo: true }))}>Bekijk demo als Van Oord</button>
+          <a className="sm muted" href="#/app" style={{ textAlign: "center" }}>Ik zoek zelf werk →</a>
+        </> : <>
+          <div className="row between"><button className="btn ghost sm" onClick={() => (v ? setV(null) : setStep(step - 1))}><ArrowLeft size={16} />Terug</button>
+            <span className="sm muted">Stap {step + 1} van 4 · {BSTEPS[step]}</span></div>
+          <div className="steps" aria-hidden>{BSTEPS.map((_, k) => <i key={k} className={k <= step ? "on" : ""} />)}</div>
+          {step === 0 && <>
+            <h2 className="bh">Over je bedrijf</h2>
+            <label className="f">Bedrijfsnaam<input className="in" autoComplete="organization" value={c.name} onChange={(e) => set("name", e.target.value)} /></label>
+            <label className="f">KvK-nummer (optioneel)<input className="in" inputMode="numeric" maxLength={8} value={c.kvk} aria-invalid={!kvkOk} onChange={(e) => set("kvk", e.target.value.replace(/\D/g, ""))} />
+              {!kvkOk && <span className="xs" style={{ color: "var(--err)" }}>Een KvK-nummer heeft 8 cijfers.</span>}</label>
+            <div className="f"><span>Sector</span><div className="row wrap">{INDUSTRIES.map((x) => <button key={x} type="button" className={`chip ${c.industry === x ? "on" : ""}`} aria-pressed={c.industry === x} onClick={() => set("industry", x)}>{x}</button>)}</div></div>
+            <div className="cols even">
+              <label className="f">Vestiging<select className="in" value={c.city} onChange={(e) => set("city", e.target.value)}>{Object.keys(CITIES).map((x) => <option key={x}>{x}</option>)}</select></label>
+              <div className="f"><span>Medewerkers</span><div className="row wrap">{SIZES.map((x) => <button key={x} type="button" className={`chip ${c.size === x ? "on" : ""}`} aria-pressed={c.size === x} onClick={() => set("size", x)}>{x}</button>)}</div></div>
+            </div>
+          </>}
+          {step === 1 && <>
+            <h2 className="bh">Laat zien hoe het is om bij jullie te werken</h2>
+            <label className="f">Over het bedrijf<textarea className="in" style={{ minHeight: 96 }} maxLength={500} placeholder="Wat doen jullie, waar, en voor wie?" value={c.about} onChange={(e) => set("about", e.target.value)} />
+              <span className="xs muted">{c.about.trim().length < 40 ? `Nog ${40 - c.about.trim().length} tekens` : "✓ Genoeg om een beeld te krijgen"}</span></label>
+            <div className="f"><span>Wat maakt het werk goed? (bijv. rooster, team, opleiding)</span>
+              {c.workplace.map((w, k) => <input key={k} className="in" aria-label={`Pluspunt ${k + 1}`} value={w} maxLength={80} onChange={(e) => set("workplace", c.workplace.map((x, n) => (n === k ? e.target.value : x)))} />)}</div>
+            <div className="f"><span>Werkplekfoto's · echte beelden werken het best ({c.media.length}/6)</span>
+              <div className="photopick">{[...new Set([...PHOTOS, ...c.media])].map((m) => <button key={m} type="button" aria-pressed={c.media.includes(m)} aria-label="Werkplekfoto" onClick={() => toggleMedia(m)}><img src={m} alt="" />{c.media.includes(m) && <Check size={16} weight="bold" className="pick" />}</button>)}</div>
+              <label className="btn sm" style={{ justifySelf: "start" }}><Camera size={16} />Eigen foto's uploaden<input type="file" accept="image/*" multiple className="sr" onChange={upload} /></label></div>
+          </>}
+          {step === 2 && <>
+            <h2 className="bh">Wie spreken professionals?</h2>
+            <p className="sm muted">Wordt getoond op je bedrijfsprofiel en in de chat. Mensen reageren sneller op een naam dan op een bedrijf.</p>
+            <label className="f">Naam contactpersoon<input className="in" autoComplete="name" value={c.people[0].n} onChange={(e) => set("people", [{ ...c.people[0], n: e.target.value }])} /></label>
+            <label className="f">Rol<input className="in" value={c.people[0].r} onChange={(e) => set("people", [{ ...c.people[0], r: e.target.value }])} /></label>
+          </>}
+          {step === 3 && (!v ? <>
+            <h2 className="bh">Plaats je eerste vacature</h2>
+            <label className="f">Vacaturetekst<textarea className="in" style={{ minHeight: 150 }} value={raw} onChange={(e) => setRaw(e.target.value)} /></label>
+            <div className="row"><button className="btn ghost sm" onClick={() => setRaw(EXAMPLE)}>Voorbeeld plakken</button><span className="grow" />
+              <button className="btn" onClick={() => finish(false)}>Later plaatsen</button>
+              <button className="btn primary" disabled={raw.trim().length < 10} onClick={() => setV(structureVacancy(raw))}><Lightning size={16} />Zet in velden</button></div>
+          </> : <>
+            <h2 className="bh">Controleer je vacature</h2>
+            <div className="ai-note"><Sparkle size={18} />Uit jouw tekst gehaald. Op verplichte certificaten wordt hard gefilterd — controleer ze.</div>
+            <div className="cols even">
+              <label className="f">Functietitel<input className="in" value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} /></label>
+              <label className="f">Locatie<select className="in" value={v.city} onChange={(e) => setV({ ...v, city: e.target.value })}><option value="">—</option>{Object.keys(CITIES).map((x) => <option key={x}>{x}</option>)}</select></label>
+              <label className="f">Contractvorm<select className="in" value={v.contract} onChange={(e) => setV({ ...v, contract: e.target.value })}><option value="">—</option>{Object.entries(CONTRACT).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
+              <label className="f">Tarief (€/{v.unit})<span className="row"><input className="in" type="number" aria-label="Tarief min" value={v.rateMin} onChange={(e) => setV({ ...v, rateMin: e.target.value })} />–<input className="in" type="number" aria-label="Tarief max" value={v.rateMax} onChange={(e) => setV({ ...v, rateMax: e.target.value })} /></span></label>
+            </div>
+            <div className="row wrap"><span className="sm muted">Verplicht:</span>{v.certs.map((x) => <span key={x} className="chip">{x}</span>)}<span className="sm muted" style={{ marginLeft: 12 }}>Skills:</span>{v.skills.map((x) => <span key={x} className="chip">{x}</span>)}</div>
+            <button className="btn primary block" disabled={!v.title || !v.city || !v.contract} onClick={() => finish(true)}>Publiceer en bekijk matches <ArrowRight size={16} /></button>
+          </>)}
+          {step < 3 && <button className="btn primary block" disabled={!valid} onClick={() => setStep(step + 1)}>Volgende</button>}
+        </>}
+      </main>
+    </div>
+  );
 }

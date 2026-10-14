@@ -14,7 +14,9 @@ const errorsOf = (page) => { const e = []; page.on("pageerror", (x) => e.push(x.
 test("de loop: profiel in 4 stappen → project → interesse → bedrijf accepteert → It's a match → chat", async ({ page }) => {
   const errors = errorsOf(page);
   await fresh(page);
-  await page.getByRole("button", { name: "Maak je Work Profile" }).click();
+  await page.getByRole("button", { name: /Maak je Work Profile/ }).click();
+  await expect(page.getByRole("heading", { name: "Zo bouw je een sterk profiel" })).toBeVisible();
+  await page.getByRole("button", { name: "Start met stap 1" }).click();
   await page.getByLabel("Naam").fill("Daan Visser");
   await page.getByLabel("Functie of richting").fill("NDT Inspector · UT2");
   await page.getByRole("button", { name: "Volgende" }).click();
@@ -23,8 +25,11 @@ test("de loop: profiel in 4 stappen → project → interesse → bedrijf accept
   await page.getByRole("button", { name: "Volgende" }).click();
   for (const c of ["UT2", "VCA", "BOSIET"]) await page.getByRole("button", { name: c, exact: true }).click();
   await page.getByRole("button", { name: "Volgende" }).click();
+  await page.getByRole("button", { name: "Volgende" }).click();
   await page.getByLabel("Korte introductie").fill("Inspecteur met offshore-ervaring.");
   await page.getByRole("button", { name: "Profiel afronden" }).click();
+  await expect(page.getByRole("img", { name: /% compleet/ })).toBeVisible();
+  await expect(page.getByText("Project met foto (nog te doen)")).toBeAttached();
   await page.getByRole("button", { name: "Voeg je eerste project toe" }).click();
 
   await page.getByLabel("Wat heb je gedaan?").fill("UT gedaan bij jacket project offshore");
@@ -46,6 +51,7 @@ test("de loop: profiel in 4 stappen → project → interesse → bedrijf accept
 
   // Business side (same browser, shared prototype store)
   await page.getByRole("link", { name: "Business" }).click();
+  await page.getByRole("button", { name: "Bekijk demo als Van Oord" }).click();
   await expect(page.getByRole("heading", { name: "Goedemorgen, Van Oord" })).toBeVisible();
   await page.screenshot({ path: "test-results/proto-biz-dashboard.png" });
   await page.getByRole("button", { name: /Daan Visser/ }).first().click();
@@ -79,6 +85,7 @@ test("bedrijf eerst: vacature plaatsen → matches → interesse → professiona
   const errors = errorsOf(page);
   await fresh(page);
   await page.goto("/app.html#/business");
+  await page.getByRole("button", { name: "Bekijk demo als Van Oord" }).click();
   await page.getByRole("button", { name: /^Vacatures/ }).click();
   await page.getByRole("button", { name: "Vacature plaatsen" }).click();
   await page.getByRole("button", { name: "Voorbeeld plakken" }).click();
@@ -127,6 +134,42 @@ test("desktop: app in iPhone-frame, mobiel schermvullend", async ({ page }) => {
   const full = await page.locator(".iphone").boundingBox();
   expect(full.width).toBe(390);
   await expect(page.locator(".statusbar")).toBeHidden();
+});
+
+test("bedrijf onboarding: account → profiel → contactpersoon → vacature → zichtbaar in de app", async ({ page }) => {
+  const errors = errorsOf(page);
+  await fresh(page, { width: 390, height: 844 });
+  await page.getByRole("button", { name: /Ik zoek personeel/ }).click();
+  await expect(page.getByRole("heading", { name: "Start met Workstr Business" })).toBeVisible();
+  await page.screenshot({ path: "test-results/proto-biz-onb.png" });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.getByRole("button", { name: "Maak bedrijfsaccount" }).click();
+  await page.getByLabel("Bedrijfsnaam").fill("Noordzee Inspectie BV");
+  await page.getByLabel("KvK-nummer (optioneel)").fill("123");
+  await page.getByRole("button", { name: "Staalbouw" }).click();
+  await expect(page.getByText("Een KvK-nummer heeft 8 cijfers.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Volgende" })).toBeDisabled();
+  await page.getByLabel("KvK-nummer (optioneel)").fill("");
+  await page.getByRole("button", { name: "Volgende" }).click();
+  await page.getByLabel("Over het bedrijf").fill("Inspectiebedrijf voor staalconstructies en offshore wind in de Rotterdamse haven.");
+  await page.getByLabel("Pluspunt 1").fill("Dagdienst, vaste ploeg");
+  await page.screenshot({ path: "test-results/proto-biz-onb-profile.png" });
+  await page.getByRole("button", { name: "Volgende" }).click();
+  await page.getByLabel("Naam contactpersoon").fill("Eva de Wit");
+  await page.getByRole("button", { name: "Volgende" }).click();
+  await page.getByRole("button", { name: "Voorbeeld plakken" }).click();
+  await page.getByRole("button", { name: "Zet in velden" }).click();
+  await page.getByRole("button", { name: /Publiceer en bekijk matches/ }).click();
+  await expect(page.getByRole("heading", { name: "Goedemorgen, Noordzee Inspectie BV" })).toBeVisible();
+  await expect(page.getByText("Maak je bedrijfsprofiel af")).toBeVisible(); // only 1 pluspunt
+  await page.screenshot({ path: "test-results/proto-biz-onb-done.png" });
+  await page.getByRole("link", { name: "App" }).click();
+  await page.getByRole("button", { name: "Bekijk met demoprofiel (Sem)" }).click();
+  const card = page.getByRole("article", { name: "NDT Inspector Monopiles bij Noordzee Inspectie BV" });
+  await card.getByRole("button", { name: /Bekijk vacature/ }).click();
+  await page.getByRole("tab", { name: "Bedrijf" }).click();
+  await expect(page.getByText("Eva de Wit · Recruiter")).toBeVisible();
+  expect(errors).toEqual([]);
 });
 
 test("managed blijft werken", async ({ page }) => {
