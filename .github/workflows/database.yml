@@ -35,6 +35,11 @@ jobs:
         env:
           SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      - name: Core loop + privacy test
+        run: node supabase/tests/loop.mjs
+        env:
+          SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       - name: Business persistence test
         run: node supabase/tests/business.mjs
         env:

@@ -37,9 +37,9 @@ assert.ok(w, "A could insert into B");
 const { error: x } = await A.db.from("applications").insert({ company_id: A.company, candidate_id: A.cand.id, vacancy_id: B.vac.id });
 assert.ok(x, "cross-company application allowed");
 
-// 4. A cannot read or change B's company
-const { data: bc } = await A.db.from("companies").select("id").eq("id", B.company);
-assert.equal(bc.length, 0);
+// 4. A cannot change B's company (company profiles are public to read since the core-loop migration)
+const { data: bc } = await A.db.from("companies").update({ name: "gekaapt" }).eq("id", B.company).select();
+assert.equal(bc.length, 0, "A updated B's company");
 const { data: upd } = await A.db.from("candidates").update({ name: "gewijzigd" }).eq("id", B.cand.id).select();
 assert.equal(upd.length, 0, "A updated B's candidate");
 
