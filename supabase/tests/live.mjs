@@ -51,4 +51,7 @@ const relog = await createClient(url, key, { auth: { persistSession: false } }).
 ok(relog.error, "deleted account can still sign in");
 ok(must(await B.db.from("members").select("user_id").eq("company_id", cid)).length === 0, "membership survived account delete");
 
+
+// opruimen: testaccounts + hun bedrijven
+must(await B.db.rpc("delete_account"));
 console.log(`✔ opslag, funnel, account verwijderen, foutmeldingen: ${n}/${n} checks passed`);

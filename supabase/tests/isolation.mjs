@@ -52,4 +52,8 @@ assert.ok(!an || an.length === 0, "anon can read candidates");
 const { error: ok } = await A.db.from("applications").insert({ company_id: A.company, candidate_id: A.cand.id, vacancy_id: A.vac.id });
 assert.ifError(ok);
 
+
+// opruimen: testaccounts + hun bedrijven
+{ const { error } = await A.db.rpc("delete_account"); if (error) throw error; }
+{ const { error } = await B.db.rpc("delete_account"); if (error) throw error; }
 console.log("✔ tenant isolation: 6/6 checks passed");

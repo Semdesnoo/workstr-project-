@@ -53,4 +53,5 @@ const dup = after.ats.candidates.find((c) => c.extId);
 const { error: d } = await db.from("candidates").insert({ company_id: cid, name: dup.name, external_id: dup.extId });
 assert.ok(d, "duplicate external import allowed");
 
+{ const { error } = await db.rpc("delete_account"); if (error) throw error; } // opruimen
 console.log("✔ business persistence: round-trip, agents, updates, deletes, dedupe passed");

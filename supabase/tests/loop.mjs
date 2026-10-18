@@ -83,4 +83,10 @@ must(await P.db.from("profiles").delete().eq("id", P.id));
 ok(must(await C.db.from("profiles").select("id").eq("id", P.id)).length === 0, "deleted profile still visible");
 ok(must(await P.db.from("projects").select("id")).length === 0, "projects survived profile delete");
 
+
+// opruimen: testaccounts + hun bedrijven
+must(await P.db.rpc("delete_account"));
+must(await Q.db.rpc("delete_account"));
+must(await C.db.rpc("delete_account"));
+must(await D.db.rpc("delete_account"));
 console.log(`✔ kernloop + privacy: ${n}/${n} checks passed`);
