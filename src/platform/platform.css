@@ -452,3 +452,12 @@ table.t { width: 100%; border-collapse: collapse; font-size: 14px; }
 .bizapp .photopick { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 640px) { .bizapp { top: 0; } }
 .bonb-art .logo small { color: #c3c6cc; }
+
+/* live mode */
+.loading { min-height: 100vh; display: grid; place-items: center; color: var(--muted); }
+.funnel { max-width: 760px; margin: 0 auto; padding: 48px 20px; display: grid; gap: 20px; }
+.funnel .fbar { display: grid; grid-template-columns: 200px 1fr 70px; gap: 12px; align-items: center; }
+.funnel .fbar i { display: block; height: 12px; border-radius: 6px; background: var(--cta, #5955E8); min-width: 2px; }
+.authbox { display: grid; gap: 12px; text-align: left; }
+.authbox a { color: inherit; text-decoration: underline; }
+.authbox .err { color: var(--err); }

@@ -7,7 +7,8 @@ import {
 import { showInterest, sendMessage, markRead, decline, isMatch, findInterest } from "./loop.js";
 import { companies, seedJobs, CITIES } from "./data.js";
 import { matchJob, certStatus, structureProject, daysLeft, AVAIL_LABEL, CERT_WORDS, profileChecklist, completion } from "./logic.js";
-import { Logo, Reasons, StatusBadge, initials, Media } from "./ui.jsx";
+import { Logo, StatusBadge, Reasons, initials, Media, AuthForm } from "./ui.jsx";
+import { BLANK, signIn, signOut, withAccount, saveFirst, deleteAccount } from "./live.js";
 
 const CONTRACT = { freelance: "Freelance", project: "Project", vast: "Vast", parttime: "Parttime", fulltime: "Fulltime" };
 const rateText = (j) => (j.unit === "uur" ? `€${j.rateMin}–€${j.rateMax} p/u` : `€${j.rateMin.toLocaleString("nl-NL")}–€${j.rateMax.toLocaleString("nl-NL")} p/m`);
@@ -42,7 +43,7 @@ export default function Candidate({ store, update }) {
   useEffect(() => { if (toast) { const t = setTimeout(() => setToast(""), 2400); return () => clearTimeout(t); } }, [toast]);
 
   const p = store.profile;
-  const jobs = [...store.jobs, ...seedJobs].map((j) => ({ ...j, m: matchJob(p, j) }));
+  const jobs = (store.live ? store.jobs : [...store.jobs, ...seedJobs]).map((j) => ({ ...j, m: matchJob(p, j) }));
   const byId = (id) => jobs.find((j) => j.id === id);
   const mine = (store.interests || []).filter((i) => i.person === "me" && byId(i.job));
   const unread = mine.reduce((n, i) => n + (i.unreadCand || 0), 0) + mine.filter((i) => i.co && !i.cand && i.declined !== "cand").length;
@@ -121,8 +122,6 @@ function MatchModal({ i, job, p, onChat, onLater }) {
 
 // ---- Onboarding: Work Profile in ±5 minutes ---------------------------------
 const SKILL_SUGGEST = ["UT", "PAUT", "MT", "PT", "VT", "NDT", "ToFD", "Weld Inspection", "Offshore", "Coating Inspection", "MIG/MAG", "TIG", "WPS", "Tekeninglezen", "Rapportage", "Maintenance", "Rigging"];
-const blankProfile = () => ({ name: "", photo: "", headline: "", city: "Rotterdam", about: "", years: 0, skills: [], sectors: [], availability: "now", availableFrom: "",
-  radiusKm: 80, minRate: 45, contracts: ["freelance"], certs: [], experience: [], education: [], projects: [], discoverable: true });
 
 const SECTORS = ["Offshore & wind", "Energie", "Petrochemie", "Staalbouw", "Maritiem", "Industrie", "Bouw"];
 const PLAN = [
@@ -136,7 +135,8 @@ const PLAN = [
 
 function Onboarding({ store, update }) {
   const [step, setStep] = useState(-2); // -2 splash · -1 plan · 0..4 wizard · 5 klaar
-  const [f, setF] = useState(blankProfile);
+  const [f, setF] = useState(BLANK);
+  const [login, setLogin] = useState(false);
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const toggle = (k, v) => set(k, f[k].includes(v) ? f[k].filter((x) => x !== v) : [...f[k], v]);
   const finish = (project) => {
@@ -163,12 +163,20 @@ function Onboarding({ store, update }) {
       <div>
         <div className="onb-sheet">
           <Logo size={24} />
+          {login ? <>
+            <p className="muted sm">Log in met je Workstr-account</p>
+            <AuthForm mode="login" onDone={(m, e, pw) => withAccount(() => signIn(m, e, pw))} />
+            <button className="btn ghost block" onClick={() => setLogin(false)}>Terug</button>
+          </> : <>
           <p className="muted sm">Hoe wil je Workstr gebruiken?</p>
           <button className="rolecard dark" onClick={() => setStep(-1)}><span className="ri"><Wrench size={22} /></span>
             <span><b>Ik zoek werk</b><small>Maak je Work Profile · ±5 min</small></span><ArrowRight size={20} /></button>
           <button className="rolecard" onClick={() => { location.hash = "#/business-app"; }}><span className="ri"><Buildings size={22} /></span>
             <span><b>Ik zoek personeel</b><small>Workstr Business voor bedrijven</small></span><ArrowRight size={20} /></button>
-          <button className="btn ghost block" onClick={useDemo}>Bekijk met demoprofiel (Sem)</button>
+          {!store.live && <button className="btn ghost block" onClick={() => setLogin(true)}>Ik heb al een account</button>}
+          {!store.live && <button className="btn ghost block" onClick={useDemo}>Bekijk met demoprofiel (Sem)</button>}
+          {store.live && <button className="btn ghost block" onClick={() => signOut()}>Uitloggen</button>}
+          </>}
         </div>
       </div>
     </div>
@@ -231,9 +239,14 @@ function Onboarding({ store, update }) {
           <h1 className="h-xl">Je Work Profile staat.</h1>
           <Ring pct={completion(items)} />
           <Checklist items={items} />
-          <p className="muted">Laat nu zien wat je echt gedaan hebt. Eén project met een foto zegt meer dan “{f.years || 5} jaar ervaring”.</p>
-          <button className="btn primary block" onClick={() => finish(true)}><Camera size={18} />Voeg je eerste project toe</button>
-          <button className="btn ghost block" onClick={() => finish(false)}>Eerst vacatures bekijken</button>
+          {!store.live && <section className="card stack">
+            <b>Bewaar je profiel</b>
+            <p className="sm muted">Met een account zien bedrijven je Work Profile, kun je solliciteren en chatten, op elk apparaat.</p>
+            <AuthForm submit="Account maken en bewaren" onDone={(m, e, pw) => withAccount(async () => saveFirst(await signIn(m, e, pw), { onboarded: true, profile: f }))} />
+          </section>}
+          <p className="muted">Laat {store.live ? "nu" : "daarna"} zien wat je echt gedaan hebt. Eén project met een foto zegt meer dan “{f.years || 5} jaar ervaring”.</p>
+          <button className={`btn ${store.live ? "primary" : ""} block`} onClick={() => finish(true)}><Camera size={18} />Voeg je eerste project toe{store.live ? "" : " (zonder account)"}</button>
+          <button className="btn ghost block" onClick={() => finish(false)}>{store.live ? "Eerst vacatures bekijken" : "Eerst rondkijken zonder account"}</button>
         </>}
         {step >= 0 && step < 5 && <button className="btn primary block" disabled={!valid} onClick={() => setStep(step + 1)}>{step === 4 ? "Profiel afronden" : "Volgende"}</button>}
       </div></div>
@@ -624,7 +637,7 @@ function Chat({ id, onClose, store, update, byId }) {
   );
 }
 
-function Profile({ p, setCreate, setCv, setPrefs, update }) {
+function Profile({ p, store, setCreate, setCv, setPrefs, update, setToast }) {
   const items = profileChecklist(p);
   const pct = completion(items);
   const next = items.find((i) => !i.done);
@@ -677,7 +690,13 @@ function Profile({ p, setCreate, setCv, setPrefs, update }) {
       <section><div className="row between"><h3 className="sec-title">Opleiding</h3><button className="btn sm ghost" onClick={() => setCreate("education")}><Plus size={14} />Opleiding</button></div>
         {p.education.map((o) => <p key={o.id}><b>{o.name}</b> <span className="muted sm">· {o.school} · {o.year}</span></p>)}</section>
 
-      <button className="btn ghost sm" style={{ justifySelf: "center" }} onClick={() => { localStorage.removeItem("workstr.v4"); location.reload(); }}>Demo resetten</button>
+      {store.live ? <div className="row" style={{ justifyContent: "center" }}>
+        <button className="btn ghost sm" onClick={() => signOut()}>Uitloggen</button>
+        <button className="btn ghost sm" onClick={async () => {
+          if (!confirm("Je account, Work Profile, projecten, certificaten, foto's en gesprekken worden definitief verwijderd. Doorgaan?")) return;
+          try { await deleteAccount(store.uid); } catch (e) { setToast(`Verwijderen mislukt: ${e.message}`); }
+        }}>Account verwijderen</button></div>
+        : <button className="btn ghost sm" style={{ justifySelf: "center" }} onClick={() => { localStorage.removeItem("workstr.v4"); location.reload(); }}>Demo resetten</button>}
     </div>
   );
 }

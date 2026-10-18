@@ -6,13 +6,15 @@ import { companies, seedJobs, seedCandidates, CITIES } from "./data.js";
 import { matchJob, toProfile, structureVacancy, certStatus, experienceYears, AVAIL_LABEL, companyChecklist, completion } from "./logic.js";
 import { Checklist, Ring } from "./Candidate.jsx";
 import { showInterest, sendMessage, markRead, isMatch, findInterest, uid } from "./loop.js";
-import { Logo, StatusBadge, Reasons, initials, Media, isVideo, saveMedia, MAX_VIDEO_MB } from "./ui.jsx";
+import { Logo, StatusBadge, Reasons, initials, Media, isVideo, saveMedia, MAX_VIDEO_MB, AuthForm } from "./ui.jsx";
+import { signIn, signOut, withAccount, saveFirst, deleteAccount } from "./live.js";
 
 const CONTRACT = { freelance: "Freelance", project: "Project", vast: "Vast", parttime: "Parttime", fulltime: "Fulltime" };
 const EXAMPLE = "NDT Inspector Monopiles\nLocatie: Rotterdam. Freelance, €58 - €70 per uur.\n- UT en PAUT op monopile-lassen\n- Rapportage aan QA/QC Lead\nEisen: UT2, VCA, BOSIET";
 
 // Professionals a company can see: other Work Profiles + the app user, if discoverable or they showed interest.
 export function people(store) {
+  if (store.live) return store.people;
   const others = seedCandidates.filter((c) => c.id !== "c1").map((c) => ({ ...toProfile(c), projects: [] }));
   const me = { ...store.profile, id: "me" };
   const visible = store.onboarded && me.name && (me.discoverable || (store.interests || []).some((i) => i.person === "me" && i.cand));
@@ -22,12 +24,13 @@ export function people(store) {
 const forEmployer = (r) => ({ ...r, text: r.text.replace(/^Je hebt /, "Heeft ").replace("binnen je radius", "binnen de radius van de kandidaat").replace("je voorkeur", "de voorkeur van de kandidaat").replace(/^Je staat/, "Staat").replace("je beschikbaarheid", "de beschikbaarheid").replace("je minimum", "het minimum").replace("Je hebt", "Heeft").replace("je projecten", "de projecten").replace(" — verplicht voor deze functie", " (verplicht)").replace("je voorkeuren", "de voorkeuren") });
 
 export default function Biz({ store, update }) {
-  const [co, setCo] = useState(store.company?.id || "vanoord");
+  const [demoCo, setCo] = useState(store.company?.id || "vanoord");
+  const co = store.live ? store.company?.id : demoCo;
   const [page, setPage] = useState("dashboard");
   const [jobId, setJobId] = useState(null);
   const [person, setPerson] = useState(null);
   const [chat, setChat] = useState(null);
-  const jobs = [...store.jobs, ...seedJobs].filter((j) => j.company === co);
+  const jobs = (store.live ? store.jobs : [...store.jobs, ...seedJobs]).filter((j) => j.company === co);
   const pool = people(store);
   const ranked = (j) => pool.map((x) => ({ x, m: matchJob(x, j) })).sort((a, b) => b.m.score - a.m.score);
   const mine = (store.interests || []).filter((i) => jobs.some((j) => j.id === i.job));
@@ -39,7 +42,7 @@ export default function Biz({ store, update }) {
   const interest = (job, pid) => {
     update((s) => showInterest(s, job, pid, "co"));
     // ponytail: seeded professionals answer automatically so the loop is visible without a second user.
-    if (pid !== "me") setTimeout(() => update((s) => {
+    if (!store.live && pid !== "me") setTimeout(() => update((s) => {
       const t = showInterest(s, job, pid, "cand");
       const i = findInterest(t, job, pid);
       return sendMessage(t, i.id, "cand", `Hoi! Leuk dat jullie interesse hebben. Ik ben ${AVAIL_LABEL[who(pid).availability]?.toLowerCase() || "binnenkort"} beschikbaar.`);
@@ -48,7 +51,7 @@ export default function Biz({ store, update }) {
   const openChat = (id) => { update((s) => markRead(s, id, "co")); setChat(id); setPerson(null); setJobId(null); setPage("berichten"); };
   const go = (p) => { setPage(p); setJobId(null); setPerson(null); };
 
-  if (!store.company && !store.bizDemo) return <BizOnboarding update={update} onDone={(id) => setCo(id)} />;
+  if (!store.company && !store.bizDemo) return <BizOnboarding store={store} update={update} onDone={(id) => setCo(id)} />;
 
   const nav = [["dashboard", "Dashboard", SquaresFour, 0], ["vacatures", "Vacatures", Briefcase, jobs.length], ["berichten", "Berichten", ChatCircle, unread]];
   return (
@@ -56,8 +59,10 @@ export default function Biz({ store, update }) {
       <nav className="side" aria-label="Business menu">
         <Logo sub="Business" />
         {nav.map(([id, label, Icon, n]) => <button key={id} aria-current={page === id ? "page" : undefined} onClick={() => go(id)}><Icon size={18} />{label}{n ? <span className="count">{n}</span> : null}</button>)}
-        <label className="f" style={{ marginTop: "auto", padding: "0 10px" }}><span className="xs">Je bekijkt als (demo)</span>
-          <select className="in" value={co} onChange={(e) => { setCo(e.target.value); go("dashboard"); }}>{Object.values(companies).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+        {store.live ? <><button style={{ marginTop: "auto" }} onClick={() => signOut()}>Uitloggen</button>
+          <button onClick={async () => { if (confirm("Je account wordt verwijderd. Was je de enige gebruiker van dit bedrijf, dan verdwijnen ook het bedrijfsprofiel, de vacatures en gesprekken. Doorgaan?")) await deleteAccount(store.uid).catch((e) => alert(`Verwijderen mislukt: ${e.message}`)); }}>Account verwijderen</button></>
+          : <label className="f" style={{ marginTop: "auto", padding: "0 10px" }}><span className="xs">Je bekijkt als (demo)</span>
+          <select className="in" value={co} onChange={(e) => { setCo(e.target.value); go("dashboard"); }}>{Object.values(companies).filter((c) => !c.live).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
       </nav>
       <main className="main">
         {person ? <ProfileView x={who(person.id)} job={jobs.find((j) => j.id === person.job)} store={store} interest={interest} openChat={openChat} onBack={() => setPerson(null)} />
@@ -256,19 +261,29 @@ const SIZES = ["1–10", "11–50", "51–250", "250+"];
 const PHOTOS = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => `./work/w${n}.jpg`);
 const BSTEPS = ["Bedrijf", "Bedrijfsprofiel", "Contactpersoon", "Eerste vacature"];
 
-function BizOnboarding({ update, onDone }) {
+function BizOnboarding({ store, update, onDone }) {
   const [step, setStep] = useState(-1);
   const [c, setC] = useState({ id: "own", own: true, name: "", kvk: "", industry: "", city: "Rotterdam", size: "", about: "", workplace: ["", "", ""], media: [PHOTOS[0], PHOTOS[5]], people: [{ n: "", r: "Recruiter" }] });
   const [raw, setRaw] = useState("");
   const [v, setV] = useState(null);
+  const [acct, setAcct] = useState({ email: "", pw: "" });
+  const [login, setLogin] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   const set = (k, val) => setC((x) => ({ ...x, [k]: val }));
+  const needAcct = !store.live;
+  const acctOk = !needAcct || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(acct.email.trim()) && acct.pw.length >= 8);
   const kvkOk = c.kvk === "" || /^\d{8}$/.test(c.kvk);
-  const valid = [c.name.trim().length >= 2 && c.industry && kvkOk, c.about.trim().length >= 40 && c.media.length >= 1, c.people[0].n.trim().length >= 2, true][step];
-  const finish = (withJob) => {
-    const company = { ...c, name: c.name.trim(), workplace: c.workplace.map((w) => w.trim()).filter(Boolean) };
+  const valid = [c.name.trim().length >= 2 && c.industry && kvkOk, c.about.trim().length >= 40 && c.media.length >= 1, c.people[0].n.trim().length >= 2 && acctOk, true][step];
+  const finish = async (withJob) => {
+    // Live: the company gets a real id and is written to Supabase together with the account.
+    const company = { ...c, id: needAcct || store.live ? crypto.randomUUID() : c.id, name: c.name.trim(), workplace: c.workplace.map((w) => w.trim()).filter(Boolean) };
     companies[company.id] = company; // makeJob reads the photo from here
-    update((s) => ({ ...s, company, jobs: withJob ? [makeJob(v, company.id), ...s.jobs] : s.jobs }));
-    onDone(company.id);
+    const jobs = withJob ? [makeJob(v, company.id)] : [];
+    if (!needAcct) { update((s) => ({ ...s, company, jobs: [...jobs, ...s.jobs] })); onDone(company.id); return; }
+    setBusy(true); setErr("");
+    try { await withAccount(async () => saveFirst(await signIn("signup", acct.email.trim(), acct.pw), { company, jobs })); onDone(company.id); }
+    catch (e) { setErr(e.message); setBusy(false); }
   };
   const toggleMedia = (m) => set("media", c.media.includes(m) ? c.media.filter((x) => x !== m) : [...c.media, m].slice(0, 6));
 
@@ -288,7 +303,10 @@ function BizOnboarding({ update, onDone }) {
             "Naam, sector en vestiging", "Over jullie, werkplekfoto's en wat het werk goed maakt — dit zien professionals", "Wie professionals spreken in de chat", "Plak je tekst, Workstr zet hem in velden, jij controleert"][k]}</span></span>
             {[<Buildings key="a" size={20} />, <Camera key="b" size={20} />, <UsersThree key="c" size={20} />, <MagnifyingGlass key="d" size={20} />][k]}</li>)}</ol>
           <button className="btn primary block" onClick={() => setStep(0)}>Maak bedrijfsaccount</button>
-          <button className="btn ghost block" onClick={() => update((s) => ({ ...s, bizDemo: true }))}>Bekijk demo als Van Oord</button>
+          {login ? <AuthForm mode="login" onDone={(m, e, pw) => withAccount(() => signIn(m, e, pw))} />
+            : needAcct && <button className="btn ghost block" onClick={() => setLogin(true)}>Ik heb al een account</button>}
+          {needAcct ? <button className="btn ghost block" onClick={() => update((s) => ({ ...s, bizDemo: true }))}>Bekijk demo als Van Oord</button>
+            : <button className="btn ghost block" onClick={() => signOut()}>Uitloggen</button>}
           <a className="sm muted" href="#/app" style={{ textAlign: "center" }}>Ik zoek zelf werk →</a>
         </> : <>
           <div className="row between"><button className="btn ghost sm" onClick={() => (v ? setV(null) : setStep(step - 1))}><ArrowLeft size={16} />Terug</button>
@@ -320,12 +338,17 @@ function BizOnboarding({ update, onDone }) {
             <p className="sm muted">Wordt getoond op je bedrijfsprofiel en in de chat. Mensen reageren sneller op een naam dan op een bedrijf.</p>
             <label className="f">Naam contactpersoon<input className="in" autoComplete="name" value={c.people[0].n} onChange={(e) => set("people", [{ ...c.people[0], n: e.target.value }])} /></label>
             <label className="f">Rol<input className="in" value={c.people[0].r} onChange={(e) => set("people", [{ ...c.people[0], r: e.target.value }])} /></label>
+            {needAcct && <>
+              <label className="f">Zakelijk e-mailadres (om in te loggen)<input className="in" type="email" autoComplete="email" value={acct.email} onChange={(e) => setAcct({ ...acct, email: e.target.value })} /></label>
+              <label className="f">Wachtwoord<input className="in" type="password" autoComplete="new-password" minLength={8} value={acct.pw} onChange={(e) => setAcct({ ...acct, pw: e.target.value })} />
+                <span className="xs muted">Minstens 8 tekens. Met een account ga je akkoord met de <a href="./terms/">voorwaarden</a> en de <a href="./privacy/">privacyverklaring</a>.</span></label>
+            </>}
           </>}
           {step === 3 && (!v ? <>
             <h2 className="bh">Plaats je eerste vacature</h2>
             <label className="f">Vacaturetekst<textarea className="in" style={{ minHeight: 150 }} value={raw} onChange={(e) => setRaw(e.target.value)} /></label>
             <div className="row"><button className="btn ghost sm" onClick={() => setRaw(EXAMPLE)}>Voorbeeld plakken</button><span className="grow" />
-              <button className="btn" onClick={() => finish(false)}>Later plaatsen</button>
+              <button className="btn" disabled={busy} onClick={() => finish(false)}>Later plaatsen</button>
               <button className="btn primary" disabled={raw.trim().length < 10} onClick={() => setV(structureVacancy(raw))}><Lightning size={16} />Zet in velden</button></div>
           </> : <>
             <h2 className="bh">Controleer je vacature</h2>
@@ -338,8 +361,9 @@ function BizOnboarding({ update, onDone }) {
             </div>
             <div className="row wrap"><span className="sm muted">Verplicht:</span>{v.certs.map((x) => <span key={x} className="chip">{x}</span>)}<span className="sm muted" style={{ marginLeft: 12 }}>Skills:</span>{v.skills.map((x) => <span key={x} className="chip">{x}</span>)}</div>
             <VacancyMedia v={v} setV={setV} />
-            <button className="btn primary block" disabled={!v.title || !v.city || !v.contract} onClick={() => finish(true)}>Publiceer en bekijk matches <ArrowRight size={16} /></button>
+            <button className="btn primary block" disabled={busy || !v.title || !v.city || !v.contract} onClick={() => finish(true)}>{busy ? "Account en vacature opslaan…" : <>Publiceer en bekijk matches <ArrowRight size={16} /></>}</button>
           </>)}
+          {err && <p className="sm" role="alert" style={{ color: "var(--err)" }}>{err}</p>}
           {step < 3 && <button className="btn primary block" disabled={!valid} onClick={() => setStep(step + 1)}>Volgende</button>}
         </>}
       </main>

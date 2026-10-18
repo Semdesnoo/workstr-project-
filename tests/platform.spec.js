@@ -1,6 +1,7 @@
 // Run: npx playwright test tests/platform.spec.js
 // Prototype loop (localStorage) + the parked live ATS (#/ats, real Supabase via .env.local).
 import { test, expect } from "@playwright/test";
+import { purge } from "./purge.js";
 
 const fresh = async (page, size = { width: 1440, height: 900 }) => {
   await page.setViewportSize(size);
@@ -142,45 +143,6 @@ test("desktop: app in iPhone-frame, mobiel schermvullend", async ({ page }) => {
   await expect(page.locator(".statusbar")).toBeHidden();
 });
 
-test("bedrijf onboarding: account → profiel → contactpersoon → vacature → zichtbaar in de app", async ({ page }) => {
-  const errors = errorsOf(page);
-  await fresh(page, { width: 390, height: 844 });
-  await page.getByRole("button", { name: /Ik zoek personeel/ }).click();
-  await expect(page.getByRole("heading", { name: "Start met Workstr Business" })).toBeVisible();
-  await page.screenshot({ path: "test-results/proto-biz-onb.png" });
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByRole("button", { name: "Maak bedrijfsaccount" }).click();
-  await page.getByLabel("Bedrijfsnaam").fill("Noordzee Inspectie BV");
-  await page.getByLabel("KvK-nummer (optioneel)").fill("123");
-  await page.getByRole("button", { name: "Staalbouw" }).click();
-  await expect(page.getByText("Een KvK-nummer heeft 8 cijfers.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Volgende" })).toBeDisabled();
-  await page.getByLabel("KvK-nummer (optioneel)").fill("");
-  await page.getByRole("button", { name: "Volgende" }).click();
-  await page.getByLabel("Over het bedrijf").fill("Inspectiebedrijf voor staalconstructies en offshore wind in de Rotterdamse haven.");
-  await page.getByLabel("Pluspunt 1").fill("Dagdienst, vaste ploeg");
-  await page.screenshot({ path: "test-results/proto-biz-onb-profile.png" });
-  await page.getByRole("button", { name: "Volgende" }).click();
-  await page.getByLabel("Naam contactpersoon").fill("Eva de Wit");
-  await page.getByRole("button", { name: "Volgende" }).click();
-  await page.getByRole("button", { name: "Voorbeeld plakken" }).click();
-  await page.getByRole("button", { name: "Zet in velden" }).click();
-  await page.locator("input[type=file]").setInputFiles("public/work/vanoord.mp4");
-  await expect(page.getByRole("button", { name: "Verwijder vacaturebeeld" }).locator("video")).toBeAttached();
-  await page.getByRole("button", { name: /Publiceer en bekijk matches/ }).click();
-  await expect(page.getByRole("heading", { name: "Goedemorgen, Noordzee Inspectie BV" })).toBeVisible();
-  await expect(page.getByText("Maak je bedrijfsprofiel af")).toBeVisible(); // only 1 pluspunt
-  await page.screenshot({ path: "test-results/proto-biz-onb-done.png" });
-  await page.getByRole("link", { name: "App", exact: true }).click();
-  await page.getByRole("button", { name: "Bekijk met demoprofiel (Sem)" }).click();
-  const card = page.getByRole("article", { name: "NDT Inspector Monopiles bij Noordzee Inspectie BV" });
-  await expect(card.locator("video")).toHaveAttribute("src", /^blob:/); // uploaded video, read back from IndexedDB
-  await card.getByRole("button", { name: /Bekijk vacature/ }).click();
-  await page.getByRole("tab", { name: "Bedrijf" }).click();
-  await expect(page.getByText("Eva de Wit · Recruiter")).toBeVisible();
-  expect(errors).toEqual([]);
-});
-
 test("business: website- en app-weergave delen dezelfde data", async ({ page }) => {
   await fresh(page);
   await page.goto("/app.html#/business");
@@ -212,8 +174,10 @@ test("geparkeerde ATS (#/ats, live Supabase): registreren → bedrijf → opslaa
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/app.html#/ats");
   await page.getByRole("button", { name: "Nog geen account? Maak er een aan" }).click();
-  await page.getByLabel("E-mail").fill(`workstr-e2e-${Date.now()}@mailinator.com`);
-  await page.getByLabel("Wachtwoord").fill(`E2e-${crypto.randomUUID()}`);
+  const acct = [`workstr-e2e-${Date.now()}@mailinator.com`, `E2e-${crypto.randomUUID()}`];
+  try {
+  await page.getByLabel("E-mail").fill(acct[0]);
+  await page.getByLabel("Wachtwoord").fill(acct[1]);
   await page.getByRole("button", { name: "Account aanmaken" }).click();
   await page.getByLabel("Bedrijfsnaam").fill("E2E Techniek BV");
   await page.getByRole("button", { name: "Aanmaken" }).click();
@@ -230,4 +194,5 @@ test("geparkeerde ATS (#/ats, live Supabase): registreren → bedrijf → opslaa
   await page.getByLabel("Vacature").selectOption({ label: "NDT Inspector — Rotterdam" });
   await expect(page.getByLabel("Verplaats Youssef El Amrani")).toHaveValue("Aanbod");
   expect(errors).toEqual([]);
+  } finally { await purge(...acct); }
 });

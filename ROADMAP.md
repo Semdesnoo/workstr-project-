@@ -13,7 +13,7 @@ Alles wat die loop niet sneller of beter maakt, wacht. Bouwen en testen gebeurt 
 | Volledige ATS + 8 agents (`#/ats`) | Werkt op Supabase, maar is meer dan V1 nodig heeft. **Geparkeerd**; bereikbaar via `#/ats`, niet in het menu. |
 | **Prototype week 1–2** (`app.html`) | Klikbaar, localStorage. **App** (`#/app`, PWA, mobiel + desktop): profiel in 4 stappen → Add Project → Discover → interesse → It's a match → chat, CV. **Business** (`#/business`, desktop): vacature plaatsen → matches → profiel → interesse → chat. Beide kanten delen dezelfde loop (`loop.js`). |
 | Managed (MSP) | Demo. Geparkeerd. |
-| **Bodem kernloop** (pilaar 1+2) | Live op Supabase: `profiles`, `profile_certificates`, `projects`, `interests`, `chat_messages` + RPC's `show_interest`, `company_interest`, `decline_interest`. Privacy in RLS; `supabase/tests/loop.mjs` (29 checks) draait in CI. Volgende: pilaar 3 opslag (foto/video/cv), 4 app + Business aansluiten (incl. inlogscherm), 5 funnelmeting. |
+| **Bodem (pilaren 1–6)** | **Live.** Accounts (e-mail + wachtwoord), Work Profiles, bedrijven, vacatures, sollicitatie → wederzijdse interesse → chat op Supabase met privacy in RLS. Foto's/video's in Supabase Storage. App + Business draaien op één datalaag (`src/platform/live.js`): ingelogd = echte data, niet ingelogd = demo. Funnel op `#/funnel` (alleen staff). Account verwijderen (AVG), foutmeldingen naar `client_errors`. Bewijs: `tests/live.spec.js` (twee browsers, echte accounts, hele loop) + 47 database-checks in CI. |
 
 ## Besluiten
 

@@ -48,3 +48,28 @@ export function Media({ src = "", alt = "", ...rest }) {
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   return url ? <video src={url} autoPlay={!still} controls={still} muted loop playsInline aria-label={alt || "Bedrijfsvideo"} {...rest} /> : <span className="media-loading" />;
 }
+
+// E-mail + wachtwoord. onDone(mode, email, password) does the work and throws a readable error.
+export function AuthForm({ mode: start = "signup", onDone, submit }) {
+  const [mode, setMode] = useState(start);
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const go = async (e) => {
+    e.preventDefault(); setErr(""); setBusy(true);
+    try { await onDone(mode, email.trim(), pw); } catch (x) { setErr(x.message); }
+    setBusy(false);
+  };
+  return (
+    <form className="authbox" onSubmit={go}>
+      <label className="f">E-mail<input className="in" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+      <label className="f">Wachtwoord<input className="in" type="password" minLength={8} required autoComplete={mode === "signup" ? "new-password" : "current-password"} value={pw} onChange={(e) => setPw(e.target.value)} />
+        {mode === "signup" && <span className="xs muted">Minstens 8 tekens.</span>}</label>
+      {mode === "signup" && <p className="xs muted">Met een account ga je akkoord met de <a href="./terms/">voorwaarden</a> en de <a href="./privacy/">privacyverklaring</a>.</p>}
+      {err && <p className="sm err" role="alert">{err}</p>}
+      <button className="btn primary block" disabled={busy}>{busy ? "Even geduld…" : mode === "signup" ? submit || "Account maken" : "Inloggen"}</button>
+      <button type="button" className="btn ghost block" onClick={() => { setMode(mode === "signup" ? "login" : "signup"); setErr(""); }}>{mode === "signup" ? "Ik heb al een account" : "Nieuw account maken"}</button>
+    </form>
+  );
+}
